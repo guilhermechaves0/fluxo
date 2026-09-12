@@ -15,7 +15,7 @@ este mesmo repositório, como no projeto de referência [MUSI](https://github.co
 
 | Nome | Matrícula | GitHub | Papel |
 |---|---|---|---|
-| Guilherme Chaves | [preencher] | [@guilhermechaves0](https://github.com/guilhermechaves0) | Product Owner e desenvolvedor |
+| Guilherme Chaves | 20250071106 | [@guilhermechaves0](https://github.com/guilhermechaves0) | Product Owner e desenvolvedor |
 
 A apresentação será na coorte B, online. A integração entre as duas disciplinas está declarada na
 [proposta](docs/proposta.md).

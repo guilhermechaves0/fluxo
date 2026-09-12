@@ -149,7 +149,7 @@ precisa das duas.
 
 | Nome | Matrícula | Conta no GitHub | Papel |
 |---|---|---|---|
-| Guilherme Chaves | [preencher] | guilhermechaves0 | Product Owner e desenvolvedor |
+| Guilherme Chaves | 20250071106 | guilhermechaves0 | Product Owner e desenvolvedor |
 
 ## 7. Coorte e integração
 
