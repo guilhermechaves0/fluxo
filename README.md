@@ -1,10 +1,10 @@
 # Fluxo
 
-O Fluxo é um assistente de finanças pessoais para Android. Ele importa o extrato que o banco já exporta, em OFX ou CSV,
-e organiza os gastos por categoria, sem precisar de conexão por Open Finance.
+O Fluxo é o assistente de finanças pessoais para Android que desenvolvo como projeto integrador de duas disciplinas do
+Bacharelado em Engenharia de Software da UFRN, em 2026.2. Ele importa o extrato que o banco já exporta, em OFX ou CSV, e
+organiza os gastos por categoria, sem precisar de conexão por Open Finance.
 
-O projeto integra duas disciplinas do Bacharelado em Engenharia de Software da UFRN, no período 2026.2. As duas usam
-este mesmo repositório, como no projeto de referência [MUSI](https://github.com/fmarquesfilho/musi).
+Uso este mesmo repositório nas duas disciplinas, como no projeto de referência [MUSI](https://github.com/fmarquesfilho/musi).
 
 | Disciplina | Pastas avaliadas |
 |---|---|
@@ -17,18 +17,17 @@ este mesmo repositório, como no projeto de referência [MUSI](https://github.co
 |---|---|---|---|
 | Guilherme Chaves | 20250071106 | [@guilhermechaves0](https://github.com/guilhermechaves0) | Product Owner e desenvolvedor |
 
-A apresentação será na coorte B, online. A integração entre as duas disciplinas está declarada na
+Faço o projeto sozinho e vou apresentar na coorte B, online. Declarei a integração entre as duas disciplinas na
 [proposta](docs/proposta.md).
 
 ## Sprint 0
 
-Nesta sprint, o repositório tem a primeira tela do aplicativo, a api com dados em memória e o parser de extratos do
-serviço Go.
+Nesta sprint, entrego a primeira tela do aplicativo, a api com dados em memória e o parser de extratos do serviço Go.
 
 | Item | Link |
 |---|---|
 | Proposta | [docs/proposta.md](docs/proposta.md) |
-| Quadro no GitHub Projects | [github.com/guilhermechaves0/fluxo/projects](https://github.com/guilhermechaves0/fluxo/projects) |
+| Quadro no GitHub Projects | [github.com/users/guilhermechaves0/projects/2](https://github.com/users/guilhermechaves0/projects/2) |
 | Vídeo de DIM0524 (Móveis) | [preencher] |
 | Vídeo de DIM0547 (Web II) | [preencher] |
 | Decisões de arquitetura | [docs/decisoes/](docs/decisoes/) |
@@ -50,7 +49,7 @@ serviço Go.
 
 ## Como rodar
 
-É preciso ter o [mise](https://mise.jdx.dev), o Docker e o SDK do Android instalados.
+Para rodar o projeto, é preciso ter o [mise](https://mise.jdx.dev), o Docker e o SDK do Android instalados.
 
 ```bash
 mise trust && mise install
@@ -70,19 +69,19 @@ O passo a passo completo está em [docs/COMO-RODAR.md](docs/COMO-RODAR.md).
 ## Checklist da Sprint 0
 
 ### DIM0524 (Móveis)
-- [ ] Repositório público, app compila e roda nos alvos Android e desktop
-- [ ] CI verde: ktlintCheck + detekt
-- [ ] docs/proposta.md com justificativa de plataforma-alvo e backend
-- [ ] 1 tela em Compose com componente próprio
-- [ ] Coorte (A/B), integração e intenção de multiplataforma declaradas
+- [x] Repositório público, app compila e roda nos alvos Android e desktop
+- [x] CI verde: ktlintCheck + detekt
+- [x] docs/proposta.md com justificativa de plataforma-alvo e backend
+- [x] 1 tela em Compose com componente próprio
+- [x] Coorte (A/B), integração e intenção de multiplataforma declaradas
 - [ ] Vídeo 5 min
 
 ### DIM0547 (Web II)
-- [ ] Monorepo público: api/ services/ protos/ docs/ mise.toml docker-compose.yml
-- [ ] mise run build && mise run test passam localmente
-- [ ] CI verde (build dos dois stacks)
-- [ ] docs/proposta.md com justificativa Ktor×Quarkus e serviço principal×Go
-- [ ] Coorte (A/B) e integração declaradas
+- [x] Monorepo público: api/ services/ protos/ docs/ mise.toml docker-compose.yml
+- [x] mise run build && mise run test passam localmente
+- [x] CI verde (build dos dois stacks)
+- [x] docs/proposta.md com justificativa Ktor×Quarkus e serviço principal×Go
+- [x] Coorte (A/B) e integração declaradas
 - [ ] Vídeo 5 min
 
 ## Licença
