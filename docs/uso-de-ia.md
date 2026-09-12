@@ -1,25 +1,25 @@
 # Uso de ferramentas de IA
 
-Registro exigido pelas sistemáticas de avaliação de DIM0524 e de DIM0547. Todo conteúdo produzido com ajuda de IA foi
-revisado pelo autor, que responde por ele nas apresentações.
+Mantenho este registro porque as sistemáticas de avaliação de DIM0524 e DIM0547 pedem que cada grupo informe as
+ferramentas de IA usadas e as tarefas em que foram aplicadas. Respondo nas apresentações por todo o conteúdo produzido
+com ajuda da ferramenta.
 
 ## Ferramentas
 
-| Ferramenta | Para que foi usada |
+| Ferramenta | Para que usei |
 |---|---|
-| Assistente de programação com IA | Leitura dos repositórios das disciplinas, planejamento da sprint, primeira versão do código e dos textos, e revisão de redação |
+| Assistente de programação com IA | Ler os repositórios das disciplinas, planejar a sprint, gerar a primeira versão do código e dos textos e revisar a redação |
 
 ## Registro da Sprint 0
 
-| Parte do projeto | Como a IA foi usada | Como o resultado foi verificado |
+| Parte do projeto | Como usei a IA | Como verifiquei |
 |---|---|---|
-| Planejamento | Leitura dos cronogramas, das rubricas e do projeto MUSI para montar o plano da sprint | Comparação do plano com as rubricas das duas disciplinas |
-| Configuração do build, do CI e dos Dockerfiles | Geração dos arquivos a partir da estrutura do MUSI e do template oficial de Kotlin Multiplatform | `mise run ci` e execução do GitHub Actions |
-| Código de `shared/`, `app/`, `api/` e `services/` | Primeira versão das classes, da tela, do parser de extratos, dos testes e dos comentários | Testes, ktlint, detekt, go vet e arch-go, além da leitura e dos ajustes do autor |
-| Proposta, README, ADR e roteiro dos vídeos | Rascunho a partir das decisões tomadas pelo autor e revisão da redação | Leitura do autor com base nos guias da Sprint 0 |
+| Planejamento | Para ler os cronogramas, as rubricas e o projeto MUSI e montar o plano da sprint | Comparação do plano com as rubricas das duas disciplinas |
+| Configuração do build, do CI e dos Dockerfiles | Para gerar os arquivos a partir da estrutura do MUSI e do template oficial de Kotlin Multiplatform | `mise run ci` e execução do GitHub Actions |
+| Código de `shared/`, `app/`, `api/` e `services/` | Para gerar a primeira versão das classes, da tela, do parser de extratos, dos testes e dos comentários | Testes, ktlint, detekt, go vet e arch-go no CI, além da leitura do código |
+| Proposta, README, ADR e roteiro dos vídeos | Para rascunhar os textos a partir das minhas decisões e revisar a redação | Leitura e revisão dos textos com base nos guias da Sprint 0 |
 
-## Decisões do autor
+## Decisões minhas
 
-A ideia do produto, um assistente de finanças no estilo do Pierre sem Open Finance, partiu do autor. O MVP, a
-plataforma e as stacks foram discutidos com a ferramenta, e a escolha final foi do autor. A gravação dos vídeos é do
-próprio autor.
+A ideia do produto, um assistente de finanças no estilo do Pierre sem Open Finance, foi minha. Discuti o MVP, a
+plataforma e as stacks com a ferramenta, e as escolhas finais foram minhas. A gravação dos vídeos também é minha.
