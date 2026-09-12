@@ -1,0 +1,31 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{kt,kts}]
+# Estilo usado tanto pelo formatador do IntelliJ quanto pelo ktlint, com vírgula final em
+# listas de várias linhas.
+ktlint_code_style = intellij_idea
+max_line_length = 120
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+# Impede o IntelliJ de agrupar imports com `*`, que o ktlint rejeita.
+ij_kotlin_name_count_to_use_star_import = 2147483647
+ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
+# No Compose, funções @Composable usam PascalCase.
+ktlint_function_naming_ignore_when_annotated_with = Composable
+
+[*.{yml,yaml,json,toml}]
+indent_size = 2
+
+[*.go]
+indent_style = tab
+
+[*.md]
+trim_trailing_whitespace = false

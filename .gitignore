@@ -1,0 +1,37 @@
+# Gradle
+.gradle/
+build/
+.kotlin/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android
+local.properties
+*.apk
+*.aab
+*.ap_
+captures/
+*.hprof
+
+# Kotlin e Java
+*.class
+hs_err_pid*
+replay_pid*
+
+# Go
+*.test
+*.out
+
+# IDEs
+.idea/
+*.iml
+*.iws
+.vscode/
+
+# Sistema operacional
+.DS_Store
+
+# Segredos e chaves de assinatura
+.env
+*.local
+*.jks
+*.keystore
