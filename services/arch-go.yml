@@ -1,0 +1,15 @@
+# Regra de dependência do serviço Go, conferida pelo arch-go no CI.
+#
+# O pacote importador/dominio só interpreta OFX e CSV. Se ele importar net/http,
+# encoding/json ou database/sql, a verificação falha.
+version: 1
+threshold:
+  compliance: 100
+  coverage: 0
+dependenciesRules:
+  - package: "**.importador.dominio"
+    shouldNotDependsOn:
+      standard:
+        - "net/http"
+        - "encoding/json"
+        - "database/sql"
