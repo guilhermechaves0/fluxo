@@ -1,0 +1,99 @@
+# Versões das ferramentas e tarefas do projeto.
+# Na primeira vez, instale o mise (https://mise.jdx.dev) e rode `mise trust && mise install`.
+#
+# A rubrica de DIM0547 confere as tarefas build, test, lint, up e ci.
+# A versão do Gradle vem do wrapper (gradle/wrapper/gradle-wrapper.properties).
+
+[tools]
+java = "temurin-21"   # o AGP é validado com JDK 17 e 21; ver docs/decisoes/0001-monorepo-e-stacks.md
+go = "1.27"
+buf = "1.71.0"
+"go:github.com/arch-go/arch-go" = "1.7.0"
+
+[env]
+FLUXO_IMPORTADOR_URL = "http://localhost:9090"
+ANDROID_HOME = "{{ get_env(name='ANDROID_HOME', default=env.HOME ~ '/Library/Android/sdk') }}"
+
+# ---------------------------------------------------------------------------
+# Tarefas conferidas pela rubrica
+# ---------------------------------------------------------------------------
+
+[tasks.build]
+description = "Compila a api, o app desktop, o APK e o serviço Go"
+run = [
+  "./gradlew :api:installDist :app:jvmJar :app-android:assembleDebug",
+  "cd services && go build ./...",
+]
+
+[tasks.test]
+description = "Roda os testes de Kotlin e de Go"
+run = [
+  "./gradlew :shared:jvmTest :api:test :app:jvmTest",
+  "cd services && go test -race ./...",
+]
+
+[tasks.lint]
+description = "Roda ktlint e detekt no Kotlin, gofmt, go vet e arch-go no Go e buf lint no contrato"
+depends = ["lint:kotlin", "lint:go", "lint:proto"]
+
+[tasks.up]
+description = "Gera a distribuição da api e sobe a api (8080) e o importador (9090) no Docker"
+run = ["./gradlew :api:installDist", "docker compose up --build"]
+
+[tasks.ci]
+description = "Roda lint, build e testes na mesma ordem do GitHub Actions"
+run = ["mise run lint", "mise run build", "mise run test"]
+
+# ---------------------------------------------------------------------------
+# Verificações de cada componente
+# ---------------------------------------------------------------------------
+
+[tasks."lint:kotlin"]
+run = "./gradlew ktlintCheck detekt"
+
+[tasks."lint:go"]
+dir = "services"
+run = [
+  'test -z "$(gofmt -l .)" || { echo "Arquivos fora do gofmt:"; gofmt -l .; exit 1; }',
+  "go vet ./...",
+  "arch-go",
+]
+
+[tasks."lint:proto"]
+run = ["buf lint", "buf build"]
+
+[tasks.fmt]
+description = "Formata o código Kotlin, Go e proto"
+run = ["./gradlew ktlintFormat", "cd services && gofmt -w .", "buf format -w"]
+
+# ---------------------------------------------------------------------------
+# Execução local
+# ---------------------------------------------------------------------------
+
+[tasks."run:api"]
+description = "Sobe a api na porta 8080"
+run = "./gradlew :api:run"
+
+[tasks."run:importador"]
+description = "Sobe o importador Go na porta 9090"
+dir = "services"
+run = "go run ./cmd/importador"
+
+[tasks."run:app"]
+description = "Abre o app no desktop"
+run = "./gradlew :app:run"
+
+[tasks."run:app-hot"]
+description = "Abre o app no desktop com hot reload"
+run = "./gradlew :app:hotRunJvm"
+
+[tasks."run:android"]
+description = "Instala e abre o app no celular conectado por USB ou no emulador"
+run = [
+  "./gradlew :app-android:installDebug",
+  '"$ANDROID_HOME/platform-tools/adb" shell am start -n br.ufrn.fluxo/.MainActivity',
+]
+
+[tasks.espelhar]
+description = "Espelha a tela do celular no Mac para demonstrações e gravações (requer scrcpy)"
+run = "scrcpy --max-size 1080 --stay-awake"
