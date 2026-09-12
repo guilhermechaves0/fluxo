@@ -1,0 +1,12 @@
+<configuration>
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss} %-5level %logger{20} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+  <!-- O CallLogging do Ktor registra cada requisicao neste logger. -->
+  <logger name="io.ktor.server.plugins.calllogging" level="INFO"/>
+</configuration>
