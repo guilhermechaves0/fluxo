@@ -1,0 +1,30 @@
+name: História de usuário
+description: Um resultado observável para quem usa o Fluxo
+labels: ["história"]
+body:
+  - type: textarea
+    id: historia
+    attributes:
+      label: História
+      description: Como [papel], quero [ação] para [benefício].
+      placeholder: Como usuária, quero importar o extrato do banco para não digitar cada compra.
+    validations:
+      required: true
+  - type: textarea
+    id: aceite
+    attributes:
+      label: Critérios de aceitação
+      description: Verificáveis por alguém que não escreveu a história.
+    validations:
+      required: true
+  - type: dropdown
+    id: prioridade
+    attributes:
+      label: Prioridade
+      options: ["P1", "P2", "P3"]
+    validations:
+      required: true
+  - type: input
+    id: estimativa
+    attributes:
+      label: Estimativa (pontos)
