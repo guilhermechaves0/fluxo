@@ -1,0 +1,43 @@
+# Serviços para rodar o projeto localmente.
+#
+#   mise run up                          # gera a distribuição da api e sobe a api (8080) e o importador (9090)
+#   docker compose --profile db up       # também sobe o Postgres 16, que a api passa a usar na Sprint 1
+#   curl -s localhost:8080/health ; curl -s localhost:9090/health
+
+services:
+  fluxo-api:
+    build:
+      context: .                     # raiz do repositório; o Dockerfile copia api/build/install/api
+      dockerfile: api/Dockerfile
+    ports: ["8080:8080"]
+    environment:
+      FLUXO_IMPORTADOR_URL: http://fluxo-importador:9090
+    mem_limit: 512m                  # mesmo limite da hospedagem gratuita prevista
+    depends_on: [fluxo-importador]
+
+  fluxo-importador:
+    build:
+      context: ./services
+    ports: ["9090:9090"]
+    environment:
+      PORT: "9090"
+    mem_limit: 256m
+
+  fluxo-db:
+    image: postgres:16-alpine
+    profiles: ["db"]                 # só sobe com --profile db
+    environment:
+      POSTGRES_USER: fluxo
+      POSTGRES_PASSWORD: fluxo       # senha de desenvolvimento local
+      POSTGRES_DB: fluxo
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fluxo -d fluxo"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - fluxo-db-dados:/var/lib/postgresql/data
+
+volumes:
+  fluxo-db-dados: {}

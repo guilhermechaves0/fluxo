@@ -1,0 +1,13 @@
+# Contexto da imagem da api. A imagem usa apenas api/build/install/api, gerado por
+# ./gradlew :api:installDist.
+.git
+.gradle
+.kotlin
+.idea
+app
+app-android
+shared/build
+services
+protos
+docs
+local.properties
