@@ -28,7 +28,7 @@ serviço Go.
 | Item | Link |
 |---|---|
 | Proposta | [docs/proposta.md](docs/proposta.md) |
-| Quadro no GitHub Projects | [preencher] |
+| Quadro no GitHub Projects | [github.com/guilhermechaves0/fluxo/projects](https://github.com/guilhermechaves0/fluxo/projects) |
 | Vídeo de DIM0524 (Móveis) | [preencher] |
 | Vídeo de DIM0547 (Web II) | [preencher] |
 | Decisões de arquitetura | [docs/decisoes/](docs/decisoes/) |
