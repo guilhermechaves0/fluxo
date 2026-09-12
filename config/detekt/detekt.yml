@@ -1,0 +1,15 @@
+# Ajustes sobre a configuração padrão do detekt (buildUponDefaultConfig = true).
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable'] # funções @Composable usam PascalCase
+
+complexity:
+  LongParameterList:
+    ignoreAnnotated: ['Composable'] # telas recebem valores e callbacks como parâmetros
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+
+style:
+  MagicNumber:
+    ignoreAnnotated: ['Composable'] # medidas de layout, como 16.dp
+    ignorePropertyDeclaration: true

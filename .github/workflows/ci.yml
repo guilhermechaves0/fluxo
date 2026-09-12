@@ -1,0 +1,116 @@
+# Integração contínua do Fluxo, com um job por componente:
+#   kotlin  ktlintCheck, detekt, testes e build da api, do app desktop e do APK (DIM0524 e DIM0547)
+#   go      gofmt, go vet, arch-go, testes e build do importador (DIM0547)
+#   proto   buf lint e buf build do contrato (DIM0547)
+#
+# `mise run ci` roda as mesmas verificações localmente.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  kotlin:
+    name: Kotlin (app, shared, api)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-37.0 build-tools;36.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: ktlint e detekt
+        run: ./gradlew ktlintCheck detekt
+
+      - name: Testes
+        run: ./gradlew :shared:jvmTest :api:test :app:jvmTest
+
+      - name: Build (api, app desktop e APK de debug)
+        run: ./gradlew :api:installDist :app:jvmJar :app-android:assembleDebug
+
+  go:
+    name: Go (services)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/go.mod
+          cache: false # não há go.sum para cachear
+
+      - name: gofmt
+        run: |
+          fora=$(gofmt -l .)
+          if [ -n "$fora" ]; then
+            echo "::error::Arquivos fora do padrão gofmt:"; echo "$fora"; exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: Arquitetura (arch-go)
+        run: |
+          go install github.com/arch-go/arch-go@v1.7.0
+          "$(go env GOPATH)/bin/arch-go"
+
+      - name: Testes
+        run: go test -race ./...
+
+      - name: Build
+        run: go build ./...
+
+  proto:
+    name: Contrato (buf)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          version: 1.71.0
+          github_token: ${{ github.token }}
+
+      - name: buf lint
+        run: buf lint
+
+      - name: buf build
+        run: buf build
+
+  # Job exigido pela proteção da main; falha se algum job anterior falhar.
+  ci:
+    name: ci
+    needs: [kotlin, go, proto]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar resultados
+        run: |
+          for r in ${{ join(needs.*.result, ' ') }}; do
+            if [ "$r" != "success" ]; then
+              echo "::error::Algum job não passou ($r)."; exit 1
+            fi
+          done
+          echo "Tudo verde."
