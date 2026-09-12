@@ -15,7 +15,7 @@ este mesmo repositório, como no projeto de referência [MUSI](https://github.co
 
 | Nome | Matrícula | GitHub | Papel |
 |---|---|---|---|
-| Guilherme Chaves | [preencher] | [@guilhermechaves0](https://github.com/guilhermechaves0) | Product Owner e desenvolvedor |
+| Guilherme Chaves | 20250071106 | [@guilhermechaves0](https://github.com/guilhermechaves0) | Product Owner e desenvolvedor |
 
 A apresentação será na coorte B, online. A integração entre as duas disciplinas está declarada na
 [proposta](docs/proposta.md).
@@ -28,7 +28,7 @@ serviço Go.
 | Item | Link |
 |---|---|
 | Proposta | [docs/proposta.md](docs/proposta.md) |
-| Quadro no GitHub Projects | [preencher] |
+| Quadro no GitHub Projects | [github.com/guilhermechaves0/fluxo/projects](https://github.com/guilhermechaves0/fluxo/projects) |
 | Vídeo de DIM0524 (Móveis) | [preencher] |
 | Vídeo de DIM0547 (Web II) | [preencher] |
 | Decisões de arquitetura | [docs/decisoes/](docs/decisoes/) |
