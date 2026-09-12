@@ -1,0 +1,54 @@
+// Contrato gRPC entre a api (Kotlin) e o importador (Go), DIM0547.
+//
+// O CI roda `buf lint` e `buf build` neste arquivo a cada push. A api passa a chamar o
+// importador por gRPC na Sprint 2; até lá a comunicação é HTTP com JSON. Os stubs de Kotlin
+// e de Go serão gerados a partir deste arquivo.
+
+syntax = "proto3";
+
+package fluxo.importador.v1;
+
+option go_package = "github.com/guilhermechaves0/fluxo/services/importador/pb;pb";
+option java_multiple_files = true;
+option java_package = "br.ufrn.fluxo.importador.v1";
+
+// Formato do arquivo de extrato.
+enum Formato {
+  FORMATO_NAO_ESPECIFICADO = 0;
+  FORMATO_OFX = 1;
+  FORMATO_CSV = 2;
+}
+
+// Receita ou despesa. O valor do lançamento é sempre positivo.
+enum Tipo {
+  TIPO_NAO_ESPECIFICADO = 0;
+  TIPO_RECEITA = 1;
+  TIPO_DESPESA = 2;
+}
+
+// Linha de extrato já convertida. O valor é inteiro, em centavos.
+message Lancamento {
+  // FITID no OFX; vazio no CSV.
+  string id_externo = 1;
+  // Data no formato AAAA-MM-DD.
+  string data = 2;
+  int64 valor_centavos = 3;
+  string descricao = 4;
+  Tipo tipo = 5;
+}
+
+message ImportarRequest {
+  bytes conteudo = 1;
+  Formato formato = 2;
+}
+
+message ImportarResponse {
+  repeated Lancamento lancamentos = 1;
+  // Quantidade de linhas que não puderam ser lidas.
+  int32 ignorados = 2;
+}
+
+// Converte extratos bancários em lançamentos.
+service ImportadorService {
+  rpc Importar(ImportarRequest) returns (ImportarResponse);
+}

@@ -1,0 +1,17 @@
+# Configuração do buf para o contrato gRPC (DIM0547).
+#
+#   buf lint     # verifica o estilo do .proto
+#   buf build    # compila o módulo
+#
+# O arquivo fica em protos/fluxo/importador/v1/ porque o buf exige que o diretório
+# corresponda ao package `fluxo.importador.v1`.
+version: v2
+modules:
+  - path: protos
+lint:
+  use:
+    - STANDARD
+  enum_zero_value_suffix: _NAO_ESPECIFICADO
+breaking:
+  use:
+    - FILE
