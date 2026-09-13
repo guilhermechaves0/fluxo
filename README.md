@@ -28,8 +28,8 @@ Nesta sprint, entrego a primeira tela do aplicativo, a api com dados em memória
 |---|---|
 | Proposta | [docs/proposta.md](docs/proposta.md) |
 | Quadro no GitHub Projects | [github.com/users/guilhermechaves0/projects/2](https://github.com/users/guilhermechaves0/projects/2) |
-| Vídeo de DIM0524 (Móveis) | [preencher] |
-| Vídeo de DIM0547 (Web II) | [preencher] |
+| Vídeo de DIM0524 (Móveis) | [youtu.be/8J29oE8NZKk](https://youtu.be/8J29oE8NZKk) |
+| Vídeo de DIM0547 (Web II) | [youtu.be/PD6YycyKgCg](https://youtu.be/PD6YycyKgCg) |
 | Decisões de arquitetura | [docs/decisoes/](docs/decisoes/) |
 | Registro de uso de IA | [docs/uso-de-ia.md](docs/uso-de-ia.md) |
 
@@ -74,7 +74,7 @@ O passo a passo completo está em [docs/COMO-RODAR.md](docs/COMO-RODAR.md).
 - [x] docs/proposta.md com justificativa de plataforma-alvo e backend
 - [x] 1 tela em Compose com componente próprio
 - [x] Coorte (A/B), integração e intenção de multiplataforma declaradas
-- [ ] Vídeo 5 min
+- [x] Vídeo 5 min
 
 ### DIM0547 (Web II)
 - [x] Monorepo público: api/ services/ protos/ docs/ mise.toml docker-compose.yml
@@ -82,7 +82,7 @@ O passo a passo completo está em [docs/COMO-RODAR.md](docs/COMO-RODAR.md).
 - [x] CI verde (build dos dois stacks)
 - [x] docs/proposta.md com justificativa Ktor×Quarkus e serviço principal×Go
 - [x] Coorte (A/B) e integração declaradas
-- [ ] Vídeo 5 min
+- [x] Vídeo 5 min
 
 ## Licença
 
