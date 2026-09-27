@@ -3,8 +3,10 @@ package br.ufrn.fluxo.presentation
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Surface
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.window.core.layout.WindowSizeClass
 import br.ufrn.fluxo.presentation.importacao.ArquivoEscolhido
 import br.ufrn.fluxo.presentation.navegacao.FluxoNavegacao
 import br.ufrn.fluxo.presentation.theme.FluxoTema
@@ -19,7 +21,14 @@ import br.ufrn.fluxo.presentation.theme.FluxoTema
 fun FluxoApp(arquivoCompartilhado: ArquivoEscolhido? = null) {
     FluxoTema {
         Surface(Modifier.fillMaxSize()) {
-            FluxoNavegacao(modifier = Modifier.safeDrawingPadding(), arquivoCompartilhado = arquivoCompartilhado)
+            // A janela decide o layout pela largura, não pela orientação: a partir da classe média
+            // (600 dp, celular deitado, tablet, desktop), o resumo do mês vira um painel ao lado da lista.
+            val largura = currentWindowAdaptiveInfo().windowSizeClass
+            FluxoNavegacao(
+                modifier = Modifier.safeDrawingPadding(),
+                arquivoCompartilhado = arquivoCompartilhado,
+                largo = largura.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND),
+            )
         }
     }
 }
