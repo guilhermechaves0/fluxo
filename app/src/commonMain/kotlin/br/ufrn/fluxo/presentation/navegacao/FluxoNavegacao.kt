@@ -41,9 +41,10 @@ import kotlin.time.Clock
 /**
  * Grafo de navegação do app.
  *
- * A lista de transações, o mês mostrado e o filtro ficam aqui, acima do NavHost, para que as três telas vejam o
- * mesmo estado. As telas recebem lambdas e não conhecem o NavController. Na Sprint 2 este estado
- * vai para um ViewModel. Os testes passam [transacoesIniciais], [hoje] e [api] para ter dados fixos.
+ * A lista de transações, o mês mostrado e os filtros de tipo e de categoria ficam aqui, acima do
+ * NavHost, para que as telas vejam o mesmo estado. As telas recebem lambdas e não conhecem o
+ * NavController. Na Sprint 2 este estado vai para um ViewModel. Os testes passam
+ * [transacoesIniciais], [hoje], [api] e [largo] para ter dados e largura fixos.
  */
 @Composable
 fun FluxoNavegacao(
@@ -53,10 +54,12 @@ fun FluxoNavegacao(
     hoje: () -> LocalDate = { Clock.System.todayIn(TimeZone.currentSystemDefault()) },
     api: ApiDoFluxo = remember { ApiDoFluxo() },
     arquivoCompartilhado: ArquivoEscolhido? = null,
+    largo: Boolean = false,
 ) {
     var transacoes by remember { mutableStateOf(transacoesIniciais) }
     var filtro by remember { mutableStateOf(FiltroTransacoes.TODAS) }
     var mes by remember { mutableStateOf(hoje().mesDoAno) }
+    var categoria by remember { mutableStateOf<String?>(null) }
     var proximoId by remember { mutableStateOf(1) }
     var importacao by remember { mutableStateOf<EstadoDaImportacao>(EstadoDaImportacao.Inicial) }
     val escopo = rememberCoroutineScope()
@@ -87,8 +90,15 @@ fun FluxoNavegacao(
                 transacoes = transacoes,
                 mes = mes,
                 filtro = filtro,
-                aoTrocarMes = { mes = it },
+                categoria = categoria,
+                hoje = hoje(),
+                largo = largo,
+                aoTrocarMes = {
+                    mes = it
+                    categoria = null // cada mês tem as suas categorias
+                },
                 aoTrocarFiltro = { filtro = it },
+                aoTrocarCategoria = { categoria = it },
                 aoAbrir = { id -> navController.navigate(DetalheDaTransacao(id)) },
                 aoAdicionar = { navController.navigate(NovaTransacao) },
                 aoImportar = {
