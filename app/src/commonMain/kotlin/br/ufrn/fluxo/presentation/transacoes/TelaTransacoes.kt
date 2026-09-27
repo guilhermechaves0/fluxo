@@ -2,6 +2,7 @@ package br.ufrn.fluxo.presentation.transacoes
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -12,8 +13,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -29,7 +32,8 @@ import br.ufrn.fluxo.dominio.saldo
  * Tela das transações do mês, com saldo e filtro por tipo. As mais recentes aparecem primeiro.
  *
  * A tela não guarda estado: recebe a lista e o filtro e avisa pelos callbacks quando o filtro
- * muda, quando uma transação é tocada e quando o botão + é tocado. Quem navega é o NavHost.
+ * muda, quando uma transação é tocada, quando o botão + é tocado e quando a importação de extrato
+ * é pedida. Quem navega é o NavHost.
  * Por isso os previews montam a tela cheia e a vazia só passando parâmetros.
  */
 @Composable
@@ -40,6 +44,7 @@ fun TelaTransacoes(
     aoAbrir: (id: String) -> Unit,
     aoAdicionar: () -> Unit,
     modifier: Modifier = Modifier,
+    aoImportar: () -> Unit = {},
 ) {
     val visiveis = remember(transacoes, filtro) { transacoes.porTipo(filtro.tipo).sortedByDescending { it.data } }
 
@@ -60,11 +65,14 @@ fun TelaTransacoes(
                 .padding(espacamento)
                 .padding(horizontal = 16.dp),
         ) {
-            Text(
-                "Transações",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.semantics { heading() },
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "Transações",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.weight(1f).semantics { heading() },
+                )
+                TextButton(onClick = aoImportar) { Text("Importar extrato") }
+            }
             Text(
                 "Saldo do mês: ${formatarReais(transacoes.saldo())}",
                 style = MaterialTheme.typography.titleMedium,

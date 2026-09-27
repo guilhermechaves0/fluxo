@@ -15,11 +15,15 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import br.ufrn.fluxo.data.transacoesDeExemplo
+import br.ufrn.fluxo.presentation.importacao.EstadoDaImportacao
+import br.ufrn.fluxo.presentation.importacao.TelaImportacao
 import br.ufrn.fluxo.presentation.navegacao.DetalheDaTransacao
 import br.ufrn.fluxo.presentation.navegacao.FluxoNavegacao
 import br.ufrn.fluxo.presentation.theme.FluxoTema
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 // Testes de interface: montam o app, agem como o usuário e conferem a árvore de semântica, a
 // mesma que o TalkBack usa. Os elementos são achados pelo texto visível ou pela descrição.
@@ -101,5 +105,54 @@ class TelasTest {
         onNodeWithText("Categoria").assertIsDisplayed()
         onNodeWithText("Receita").performClick()
         onNodeWithText("Categoria").assertDoesNotExist()
+    }
+
+    @Test
+    fun importarExtratoAbreATelaEVoltaParaALista() = runComposeUiTest {
+        abrirApp()
+        onNodeWithText("Importar extrato").performClick()
+        onNode(isHeading()).assertTextEquals("Importar extrato")
+        onNodeWithText("Escolher arquivo").assertIsEnabled()
+        onNodeWithText("Voltar").performClick()
+        onNodeWithText("Saldo do mês: R$ 3.417,85").assertIsDisplayed()
+    }
+
+    @Test
+    fun previaMostraOQueEhNovoEConfirma() = runComposeUiTest {
+        var confirmou = false
+        val previa =
+            EstadoDaImportacao.Previa(
+                nomeDoArquivo = "extrato.ofx",
+                origem = "Nubank",
+                novas = transacoesDeExemplo.take(2),
+                repetidas = 1,
+                ignoradas = 0,
+            )
+        setContent {
+            FluxoTema {
+                TelaImportacao(previa, aoEscolherArquivo = {}, aoConfirmar = { confirmou = true }, aoVoltar = {})
+            }
+        }
+        onNodeWithText("Nubank · extrato.ofx", substring = true).assertIsDisplayed()
+        onNodeWithText("2 lançamentos novos, 1 já estava na lista", substring = true).assertIsDisplayed()
+        onNodeWithText("Salário").assertIsDisplayed()
+        onNodeWithText("Importar 2 lançamentos").performClick()
+        assertTrue(confirmou)
+    }
+
+    @Test
+    fun falhaNaLeituraMostraAMensagemEDeixaTentarDeNovo() = runComposeUiTest {
+        setContent {
+            FluxoTema {
+                TelaImportacao(
+                    EstadoDaImportacao.Falha("o cabeçalho \"a, b\" não tem colunas que eu reconheça"),
+                    aoEscolherArquivo = {},
+                    aoConfirmar = {},
+                    aoVoltar = {},
+                )
+            }
+        }
+        onNodeWithText("não tem colunas que eu reconheça", substring = true).assertIsDisplayed()
+        onNodeWithText("Escolher outro arquivo").assertIsEnabled()
     }
 }
