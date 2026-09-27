@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.navigation.NavHostController
@@ -198,6 +199,32 @@ class TelasTest {
         onNodeWithText("Importar 1 lançamento").performClick()
         onNodeWithText("CONTA DE LUZ").assertIsDisplayed()
         onNodeWithText("Saldo do mês: R$ 3.227,95").assertIsDisplayed()
+    }
+
+    @Test
+    fun trocarDeMesMostraSoAsTransacoesESaldoDaqueleMes() = runComposeUiTest {
+        abrirApp()
+        onNodeWithText("Setembro de 2026").assertIsDisplayed()
+        onNodeWithContentDescription("Mês anterior").performClick()
+        onNodeWithText("Agosto de 2026").assertIsDisplayed()
+        onNodeWithText("Saldo do mês: R$ 0,00").assertIsDisplayed()
+        onNodeWithText("Nenhuma transação em agosto de 2026", substring = true).assertIsDisplayed()
+        onNodeWithContentDescription("Próximo mês").performClick()
+        onNodeWithText("Saldo do mês: R$ 3.417,85").assertIsDisplayed()
+    }
+
+    @Test
+    fun lancarNumaDataDeOutroMesMostraEsseMes() = runComposeUiTest {
+        abrirFormulario()
+        onNodeWithText("Descrição").performTextInput("Livro")
+        onNodeWithText("Valor").performTextInput("60")
+        onNodeWithText("Data").performTextClearance()
+        onNodeWithText("Data").performTextInput("15/08/2026")
+        onNodeWithText("Mercado").performScrollTo().performClick()
+        onNodeWithText("Salvar").performScrollTo().performClick()
+        onNodeWithText("Agosto de 2026").assertIsDisplayed()
+        onNodeWithText("Livro").assertIsDisplayed()
+        onNodeWithText("Saldo do mês: -R$ 60,00").assertIsDisplayed()
     }
 
     private companion object {
