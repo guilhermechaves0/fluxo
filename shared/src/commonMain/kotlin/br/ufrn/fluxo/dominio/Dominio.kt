@@ -138,3 +138,19 @@ fun List<Transacao>.doMes(mes: Mes): List<Transacao> = filter { it.data.mesDoAno
 
 /** "setembro de 2026". */
 fun formatarMes(mes: Mes): String = "${NOMES_DOS_MESES[mes.numero - 1]} de ${mes.ano}"
+
+private val SEM_ACENTO =
+    mapOf(
+        'á' to 'a', 'à' to 'a', 'â' to 'a', 'ã' to 'a', 'é' to 'e', 'ê' to 'e', 'í' to 'i',
+        'ó' to 'o', 'ô' to 'o', 'õ' to 'o', 'ú' to 'u', 'ü' to 'u', 'ç' to 'c',
+    )
+
+/**
+ * Categoria a partir do nome que o banco usa ("Pagamentos/Créditos"), com um id estável tirado do
+ * nome ("pagamentos-creditos"). A api e o app chegam ao mesmo id para o mesmo nome.
+ */
+fun categoriaPeloNome(nome: String): Categoria {
+    val semAcento = nome.trim().lowercase().map { SEM_ACENTO[it] ?: it }.joinToString("")
+    val id = semAcento.replace(Regex("[^a-z0-9]+"), "-").trim('-')
+    return Categoria(id = id.ifEmpty { "outros" }, nome = nome.trim())
+}
