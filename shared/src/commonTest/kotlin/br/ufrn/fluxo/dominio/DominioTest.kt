@@ -5,6 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class DominioTest {
     private val mercado = Categoria(id = "mercado", nome = "Mercado")
@@ -72,5 +73,22 @@ class DominioTest {
         assertNull(lerData("31/02/2026"))
         assertNull(lerData("2026-09-27"))
         assertNull(lerData("27/09/26"))
+    }
+
+    @Test
+    fun mesAnteriorESeguinteAtravessamOAno() {
+        assertEquals(Mes(2025, 12), Mes(2026, 1).anterior())
+        assertEquals(Mes(2027, 1), Mes(2026, 12).seguinte())
+        assertTrue(Mes(2026, 8) < Mes(2026, 9))
+        assertFailsWith<IllegalArgumentException> { Mes(2026, 13) }
+    }
+
+    @Test
+    fun doMesSoDevolveAsTransacoesDaquelesMesEFormataONome() {
+        val agosto = Transacao("t4", "Mercado de agosto", 5_000, LocalDate.parse("2026-08-30"), Tipo.DESPESA)
+        val todas = transacoes + agosto
+        assertEquals(listOf("t4"), todas.doMes(Mes(2026, 8)).map { it.id })
+        assertEquals(3, todas.doMes(LocalDate.parse("2026-09-27").mesDoAno).size)
+        assertEquals("março de 2026", formatarMes(Mes(2026, 3)))
     }
 }

@@ -108,3 +108,33 @@ fun lerData(texto: String): LocalDate? {
     val (dia, mes, ano) = numeros
     return runCatching { LocalDate(ano, mes, dia) }.getOrNull()
 }
+
+private const val MESES_NO_ANO = 12
+private val NOMES_DOS_MESES =
+    listOf(
+        "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+        "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+    )
+
+/** Mês de um ano, usado para mostrar as transações e o saldo de um mês por vez. [numero] vai de 1 a 12. */
+data class Mes(val ano: Int, val numero: Int) : Comparable<Mes> {
+    init {
+        require(numero in 1..MESES_NO_ANO) { "Mês fora de 1 a 12: $numero" }
+    }
+
+    fun anterior(): Mes = if (numero == 1) Mes(ano - 1, MESES_NO_ANO) else Mes(ano, numero - 1)
+
+    fun seguinte(): Mes = if (numero == MESES_NO_ANO) Mes(ano + 1, 1) else Mes(ano, numero + 1)
+
+    override fun compareTo(other: Mes): Int = compareValuesBy(this, other, Mes::ano, Mes::numero)
+}
+
+/** Mês em que a data cai. */
+val LocalDate.mesDoAno: Mes
+    get() = Mes(year, month.number)
+
+/** Só as transações do [mes]. */
+fun List<Transacao>.doMes(mes: Mes): List<Transacao> = filter { it.data.mesDoAno == mes }
+
+/** "setembro de 2026". */
+fun formatarMes(mes: Mes): String = "${NOMES_DOS_MESES[mes.numero - 1]} de ${mes.ano}"
