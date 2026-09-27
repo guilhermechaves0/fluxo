@@ -40,7 +40,7 @@ class ApiDoFluxo(private val url: String = URL_DA_API, private val cliente: Http
             ExtratoNaApi(
                 origem = corpo.origem,
                 transacoes = corpo.transacoes.map { it.paraTransacao() },
-                ignorados = corpo.ignorados.size,
+                ignorados = corpo.ignorados.map { it.motivo },
             )
         } catch (e: IllegalArgumentException) {
             throw FalhaNaApi("A api respondeu algo que o app não entende.", e)
@@ -68,8 +68,8 @@ class ApiDoFluxo(private val url: String = URL_DA_API, private val cliente: Http
             ?: "A api respondeu ${resposta.status.value}."
 }
 
-/** O que a api entendeu do extrato. */
-data class ExtratoNaApi(val origem: String, val transacoes: List<Transacao>, val ignorados: Int)
+/** O que a api entendeu do extrato. [ignorados] traz o motivo de cada linha que ficou de fora. */
+data class ExtratoNaApi(val origem: String, val transacoes: List<Transacao>, val ignorados: List<String>)
 
 /** Erro de rede ou resposta de erro da api, com uma mensagem que pode ir para a tela. */
 class FalhaNaApi(mensagem: String, causa: Throwable? = null) : Exception(mensagem, causa)

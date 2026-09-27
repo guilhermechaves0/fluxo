@@ -36,7 +36,7 @@ class ApiDoFluxoTest {
         val extrato = api(HttpStatusCode.OK, corpo).previaDeImportacao("extrato.ofx", byteArrayOf(1))
         assertEquals("Nubank", extrato.origem)
         assertEquals(Tipo.DESPESA, extrato.transacoes.single().tipo)
-        assertEquals(1, extrato.ignorados)
+        assertEquals(listOf("x"), extrato.ignorados)
     }
 
     @Test

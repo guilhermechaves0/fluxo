@@ -9,13 +9,16 @@ sealed interface EstadoDaImportacao {
 
     data class Lendo(val nomeDoArquivo: String) : EstadoDaImportacao
 
-    /** [novas] entram na lista ao confirmar; [repetidas] já estavam nela, de uma importação anterior. */
+    /**
+     * [novas] entram na lista ao confirmar; [repetidas] já estavam nela, de uma importação anterior;
+     * [ignoradas] traz o motivo de cada linha do arquivo que não virou lançamento.
+     */
     data class Previa(
         val nomeDoArquivo: String,
         val origem: String,
         val novas: List<Transacao>,
         val repetidas: Int,
-        val ignoradas: Int,
+        val ignoradas: List<String>,
     ) : EstadoDaImportacao
 
     data class Falha(val mensagem: String) : EstadoDaImportacao

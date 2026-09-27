@@ -135,7 +135,7 @@ class TelasTest {
                 origem = "Nubank",
                 novas = transacoesDeExemplo.take(2),
                 repetidas = 1,
-                ignoradas = 0,
+                ignoradas = emptyList(),
             )
         setContent {
             FluxoTema {

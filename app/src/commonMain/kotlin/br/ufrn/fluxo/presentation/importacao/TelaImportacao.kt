@@ -122,15 +122,42 @@ private fun PassoFalha(estado: EstadoDaImportacao.Falha, aoEscolherArquivo: () -
     Button(onClick = aoEscolherArquivo, modifier = Modifier.fillMaxWidth()) { Text("Escolher outro arquivo") }
 }
 
-/** "3 lançamentos novos, 2 já estavam na lista, 1 linha ignorada". */
+/** "3 lançamentos novos, 2 já estavam na lista, 6 linhas ignoradas (5 de saldo, 1 com data inválida)". */
 fun resumoDaPrevia(previa: EstadoDaImportacao.Previa): String = buildList {
     add(if (previa.novas.size == 1) "1 lançamento novo" else "${previa.novas.size} lançamentos novos")
     if (previa.repetidas > 0) add("${previa.repetidas} já estava${if (previa.repetidas == 1) "" else "m"} na lista")
-    if (previa.ignoradas >
-        0
-    ) {
-        add(if (previa.ignoradas == 1) "1 linha ignorada" else "${previa.ignoradas} linhas ignoradas")
-    }
+    if (previa.ignoradas.isNotEmpty()) add(resumoDasIgnoradas(previa.ignoradas))
 }.joinToString(", ")
+
+private fun resumoDasIgnoradas(motivos: List<String>): String {
+    val total = if (motivos.size == 1) "1 linha ignorada" else "${motivos.size} linhas ignoradas"
+    val grupos =
+        motivos
+            .groupingBy { motivoCurto(it) }
+            .eachCount()
+            .entries
+            .sortedByDescending { it.value }
+    val detalhe =
+        if (grupos.size == 1) {
+            grupos.single().key
+        } else {
+            grupos.joinToString(", ") { "${it.value} ${it.key}" }
+        }
+    return "$total ($detalhe)"
+}
+
+/** Traduz o motivo que o importador devolve para uma frase curta. O que vem depois de ":" é o valor da linha. */
+fun motivoCurto(motivo: String): String {
+    val chave = motivo.substringBefore(":").trim().lowercase()
+    return when {
+        chave == "linha de saldo" -> "de saldo"
+        chave == "valor zero" -> "com valor zero"
+        chave.contains("repetido") -> "repetidas no arquivo"
+        chave.startsWith("data inválida") -> "com data inválida"
+        chave.startsWith("valor inválido") -> "com valor inválido"
+        chave.startsWith("campo obrigatório ausente") -> "sem data ou valor"
+        else -> "com outro problema"
+    }
+}
 
 private fun quantos(n: Int) = if (n == 1) "1 lançamento" else "$n lançamentos"

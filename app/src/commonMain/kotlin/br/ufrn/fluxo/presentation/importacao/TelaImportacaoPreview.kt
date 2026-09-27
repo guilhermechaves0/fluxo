@@ -25,7 +25,7 @@ fun TelaImportacaoPreviaPreview() {
                 origem = "Nubank",
                 novas = transacoesDeExemplo.take(3),
                 repetidas = 2,
-                ignoradas = 1,
+                ignoradas = listOf("linha de saldo"),
             ),
             aoEscolherArquivo = {},
             aoConfirmar = {},
