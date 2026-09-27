@@ -1,7 +1,6 @@
 package br.ufrn.fluxo.presentation.importacao
 
 import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -16,16 +15,7 @@ actual fun rememberEscolhaDeArquivo(aoEscolher: (ArquivoEscolhido?) -> Unit): ()
     val contexto = LocalContext.current
     val seletor =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-            val arquivo =
-                uri?.let {
-                    val resolvedor = contexto.contentResolver
-                    val nome =
-                        resolvedor.query(it, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
-                            if (cursor.moveToFirst()) cursor.getString(0) else null
-                        } ?: "extrato"
-                    resolvedor.openInputStream(it)?.use { entrada -> ArquivoEscolhido(nome, entrada.readBytes()) }
-                }
-            aoEscolher(arquivo)
+            aoEscolher(uri?.let { lerArquivo(contexto, it) })
         }
     return { seletor.launch(TIPOS_ACEITOS) }
 }

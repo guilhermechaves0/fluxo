@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.isHeading
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -15,12 +16,20 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import br.ufrn.fluxo.data.ApiDoFluxo
 import br.ufrn.fluxo.data.transacoesDeExemplo
+import br.ufrn.fluxo.presentation.importacao.ArquivoEscolhido
 import br.ufrn.fluxo.presentation.importacao.EstadoDaImportacao
 import br.ufrn.fluxo.presentation.importacao.TelaImportacao
 import br.ufrn.fluxo.presentation.navegacao.DetalheDaTransacao
 import br.ufrn.fluxo.presentation.navegacao.FluxoNavegacao
 import br.ufrn.fluxo.presentation.theme.FluxoTema
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -154,5 +163,44 @@ class TelasTest {
         }
         onNodeWithText("não tem colunas que eu reconheça", substring = true).assertIsDisplayed()
         onNodeWithText("Escolher outro arquivo").assertIsEnabled()
+    }
+
+    @Test
+    fun extratoCompartilhadoPorOutroAppAbreNaImportacaoEEntraNaLista() = runComposeUiTest {
+        val previa =
+            """{"formato":"CSV","origem":"Banco do Brasil","transacoes":[{"id":"imp-bancodobrasil-1",""" +
+                """"descricao":"CONTA DE LUZ","valorCentavos":18990,"data":"2026-09-20","tipo":"DESPESA"}],"ignorados":[]}"""
+        val api =
+            ApiDoFluxo(
+                url = "http://api",
+                cliente =
+                HttpClient(
+                    MockEngine {
+                        respond(previa, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+                    },
+                ),
+            )
+        setContent {
+            navegacao = rememberNavController()
+            FluxoTema {
+                FluxoNavegacao(
+                    navController = navegacao,
+                    hoje = { LocalDate(2026, 9, 27) },
+                    api = api,
+                    arquivoCompartilhado = ArquivoEscolhido("extrato-bb.csv", "Data;Valor".encodeToByteArray()),
+                )
+            }
+        }
+        waitUntil(timeoutMillis = TEMPO_DA_API_MS) {
+            onAllNodesWithText("Importar 1 lançamento").fetchSemanticsNodes().isNotEmpty()
+        }
+        onNodeWithText("Banco do Brasil · extrato-bb.csv", substring = true).assertIsDisplayed()
+        onNodeWithText("Importar 1 lançamento").performClick()
+        onNodeWithText("CONTA DE LUZ").assertIsDisplayed()
+        onNodeWithText("Saldo do mês: R$ 3.227,95").assertIsDisplayed()
+    }
+
+    private companion object {
+        const val TEMPO_DA_API_MS = 5_000L
     }
 }
