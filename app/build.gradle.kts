@@ -36,6 +36,13 @@ kotlin {
             implementation(libs.compose.ui)
             implementation(libs.compose.uiToolingPreview) // anotação @Preview no commonMain
             implementation(libs.navigation.compose)
+            implementation(libs.ktor.client.core) // chama a api (DIM0547)
+            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+        }
+        androidMain.dependencies {
+            implementation(libs.androidx.activity.compose) // seletor de arquivo do sistema
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -43,6 +50,8 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.compose.uiTest)
+            implementation(libs.ktor.client.mock)
+            implementation(libs.kotlinx.coroutines.test)
         }
         jvmTest.dependencies {
             implementation(compose.desktop.currentOs) // o Skia desenha a tela nos testes de interface

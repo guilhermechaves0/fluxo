@@ -46,6 +46,17 @@ message ImportarResponse {
   repeated Lancamento lancamentos = 1;
   // Quantidade de linhas que não puderam ser lidas.
   int32 ignorados = 2;
+  // Banco e tipo de extrato reconhecidos, como "Nubank (conta)", ou só o formato.
+  string origem = 3;
+  Formato formato = 4;
+  // Cada bloco OFX ou linha CSV ignorada, com o motivo.
+  repeated LinhaIgnorada linhas_ignoradas = 5;
+}
+
+message LinhaIgnorada {
+  // Número do bloco no OFX ou da linha no CSV, a partir de 1.
+  int32 posicao = 1;
+  string motivo = 2;
 }
 
 // Converte extratos bancários em lançamentos.

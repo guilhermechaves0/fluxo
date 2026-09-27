@@ -14,5 +14,8 @@ data class DetalheDaTransacao(val id: String)
 @Serializable
 data object NovaTransacao
 
+@Serializable
+data object ImportarExtrato
+
 /** Base do deep link do detalhe: fluxo://transacao/t-03 abre a transação t-03. */
 const val ENDERECO_DO_DETALHE = "fluxo://transacao"

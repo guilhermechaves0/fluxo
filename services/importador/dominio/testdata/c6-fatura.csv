@@ -1,0 +1,4 @@
+Data de Compra;Nome no Cartão;Final do Cartão;Categoria;Descrição;Parcela;Valor (em US$);Cotação (em R$);Valor (em R$)
+02/09/2026;FULANO EXEMPLO;0000;Supermercados;MERCADO EXEMPLO;Única;0;0;152,37
+05/09/2026;FULANO EXEMPLO;0000;Departamento;LOJA EXEMPLO;2/3;0;0;99,90
+06/09/2026;FULANO EXEMPLO;0000;Departamento;ESTORNO LOJA EXEMPLO;Única;0;0;-20,00

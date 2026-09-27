@@ -22,10 +22,14 @@ dependencies {
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.ktor.client.core) // chama o importador em Go
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
     implementation(libs.koin.ktor)
     implementation(libs.logback.classic)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.koin.test)
+    testImplementation(libs.ktor.client.mock)
 }

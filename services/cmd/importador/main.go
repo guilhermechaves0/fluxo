@@ -1,17 +1,23 @@
 // Serviço importador do Fluxo (DIM0547).
 //
-// Recebe extratos bancários em OFX ou CSV e devolve os lançamentos. Por enquanto expõe
-// /health e POST /importar, que responde 501; o parser de importador/dominio passa a ser
-// usado por essa rota na Sprint 1. Usa apenas a biblioteca padrão.
+// Recebe extratos bancários em OFX ou CSV e devolve os lançamentos. Expõe /health e
+// POST /importar, que lê o corpo da requisição com o parser de importador/dominio. Usa
+// apenas a biblioteca padrão.
 package main
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/guilhermechaves0/fluxo/services/importador/dominio"
 )
+
+const tamanhoMaximo = 5 << 20 // 5 MB: um extrato de vários anos ainda cabe com folga
 
 func main() {
 	porta := os.Getenv("PORT")
@@ -42,11 +48,69 @@ func rotas() *http.ServeMux {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"status":"UP"}`))
 	})
-	mux.HandleFunc("POST /importar", func(w http.ResponseWriter, _ *http.Request) {
-		problema(w, http.StatusNotImplemented, "nao-implementado",
-			"A importação de extratos entra na Sprint 1. O parser já existe em importador/dominio.")
-	})
+	mux.HandleFunc("POST /importar", importar)
 	return mux
+}
+
+// importar lê o arquivo inteiro do corpo e responde com os lançamentos e as linhas ignoradas.
+// O conteúdo do extrato não vai para o log, só as contagens.
+func importar(w http.ResponseWriter, r *http.Request) {
+	conteudo, err := io.ReadAll(http.MaxBytesReader(w, r.Body, tamanhoMaximo))
+	var grande *http.MaxBytesError
+	if errors.As(err, &grande) {
+		problema(w, http.StatusRequestEntityTooLarge, "extrato-grande-demais", "O extrato passa de 5 MB.")
+		return
+	}
+	if err != nil {
+		problema(w, http.StatusBadRequest, "corpo-invalido", "Não consegui ler o corpo da requisição.")
+		return
+	}
+	extrato, err := dominio.LerExtrato(conteudo)
+	switch {
+	case errors.Is(err, dominio.ErrArquivoVazio):
+		problema(w, http.StatusBadRequest, "extrato-vazio", "O arquivo está vazio.")
+		return
+	case err != nil:
+		problema(w, http.StatusUnprocessableEntity, "extrato-nao-reconhecido", err.Error())
+		return
+	}
+	slog.Info("extrato lido", "formato", extrato.Formato, "origem", extrato.Origem,
+		"lancamentos", len(extrato.Lancamentos), "ignorados", len(extrato.Ignorados))
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(paraResposta(extrato))
+}
+
+type resposta struct {
+	Formato     string           `json:"formato"`
+	Origem      string           `json:"origem"`
+	Lancamentos []lancamentoJSON `json:"lancamentos"`
+	Ignorados   []ignoradoJSON   `json:"ignorados"`
+}
+
+type lancamentoJSON struct {
+	IDExterno     string `json:"idExterno"`
+	Data          string `json:"data"`
+	ValorCentavos int64  `json:"valorCentavos"`
+	Descricao     string `json:"descricao"`
+	Tipo          string `json:"tipo"`
+}
+
+type ignoradoJSON struct {
+	Posicao int    `json:"posicao"`
+	Motivo  string `json:"motivo"`
+}
+
+func paraResposta(e dominio.Extrato) resposta {
+	r := resposta{Formato: string(e.Formato), Origem: e.Origem, Lancamentos: []lancamentoJSON{},
+		Ignorados: []ignoradoJSON{}}
+	for _, l := range e.Lancamentos {
+		r.Lancamentos = append(r.Lancamentos, lancamentoJSON{IDExterno: l.IDExterno, Data: l.Data,
+			ValorCentavos: l.ValorCentavos, Descricao: l.Descricao, Tipo: string(l.Tipo)})
+	}
+	for _, i := range e.Ignorados {
+		r.Ignorados = append(r.Ignorados, ignoradoJSON{Posicao: i.Posicao, Motivo: i.Motivo})
+	}
+	return r
 }
 
 // problema escreve a resposta de erro no formato da RFC 9457 (application/problem+json).
