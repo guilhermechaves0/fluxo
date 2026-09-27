@@ -14,6 +14,9 @@ private val mercado = Categoria(id = "mercado", nome = "Mercado")
 private val alimentacao = Categoria(id = "alimentacao", nome = "Alimentação")
 private val transporte = Categoria(id = "transporte", nome = "Transporte")
 
+/** Categorias oferecidas no formulário de lançamento. */
+val categoriasDeExemplo: List<Categoria> = listOf(alimentacao, mercado, moradia, transporte)
+
 private fun transacao(
     id: String,
     descricao: String,
@@ -32,7 +35,3 @@ val transacoesDeExemplo: List<Transacao> =
         transacao("t-05", "Corrida de aplicativo", centavos = 2_380, data = "2026-09-09", DESPESA, transporte),
         transacao("t-06", "Padaria", centavos = 4_590, data = "2026-09-10", DESPESA, alimentacao),
     )
-
-/** Despesa criada pelo botão +. O formulário de lançamento substitui este atalho na Sprint 1. */
-fun novaTransacaoDeExemplo(sequencia: Int): Transacao =
-    transacao("nova-$sequencia", "Café", centavos = 850, data = "2026-09-12", DESPESA, alimentacao)

@@ -1,6 +1,6 @@
 // Interface do app (DIM0524). O código fica em commonMain e roda no desktop e no Android;
 // o APK é gerado por :app-android.
-//   Testes:          ./gradlew :app:jvmTest
+//   Testes:          ./gradlew :app:jvmTest (inclui os testes de interface, que rodam no alvo desktop)
 //   App no desktop:  ./gradlew :app:run
 //   Hot reload:      ./gradlew :app:hotRunJvm
 
@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.android.kmp.library)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization) // rotas da navegação são classes @Serializable
 }
 
 kotlin {
@@ -34,12 +35,17 @@ kotlin {
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.uiToolingPreview) // anotação @Preview no commonMain
+            implementation(libs.navigation.compose)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.compose.uiTest)
+        }
+        jvmTest.dependencies {
+            implementation(compose.desktop.currentOs) // o Skia desenha a tela nos testes de interface
         }
     }
 }

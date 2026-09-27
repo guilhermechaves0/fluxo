@@ -41,6 +41,10 @@ jobs:
       - name: ktlint e detekt
         run: ./gradlew ktlintCheck detekt
 
+      # Os testes de interface rodam no alvo desktop e o Skia precisa destas bibliotecas no Linux.
+      - name: Bibliotecas gráficas para os testes de interface
+        run: sudo apt-get update && sudo apt-get install -y libgl1 libegl1 libfontconfig1
+
       - name: Testes
         run: ./gradlew :shared:jvmTest :api:test :app:jvmTest
 

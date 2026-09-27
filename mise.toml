@@ -94,6 +94,11 @@ run = [
   '"$ANDROID_HOME/platform-tools/adb" shell am start -n br.ufrn.fluxo/.MainActivity',
 ]
 
+[tasks."run:deeplink"]
+description = "Abre no celular o detalhe de uma transação pelo deep link (padrão: t-03)"
+usage = 'arg "[id]" default="t-03"'
+run = '"$ANDROID_HOME/platform-tools/adb" shell am start -a android.intent.action.VIEW -d "fluxo://transacao/${usage_id}" br.ufrn.fluxo'
+
 [tasks.espelhar]
 description = "Espelha a tela do celular no Mac para demonstrações e gravações (requer scrcpy)"
 run = "scrcpy --max-size 1080 --stay-awake"

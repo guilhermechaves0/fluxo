@@ -19,6 +19,13 @@ com ajuda da ferramenta.
 | Código de `shared/`, `app/`, `api/` e `services/` | Para gerar a primeira versão das classes, da tela, do parser de extratos, dos testes e dos comentários | Testes, ktlint, detekt, go vet e arch-go no CI, além da leitura do código |
 | Proposta, README, ADR e roteiro dos vídeos | Para rascunhar os textos a partir das minhas decisões e revisar a redação | Leitura e revisão dos textos com base nos guias da Sprint 0 |
 
+## Registro da Sprint 1
+
+| Parte do projeto | Como usei a IA | Como verifiquei |
+|---|---|---|
+| Navegação, formulário de lançamento e detalhe da transação | Para gerar a primeira versão das telas, das rotas e da validação a partir do exemplo `tarefas-compose` da disciplina | Testes de interface e de regra, ktlint e detekt, além do uso do app no celular |
+| Deep link | Para declarar o link no grafo de navegação e no manifesto do Android | Link aberto no celular com `mise run run:deeplink` |
+
 ## Decisões minhas
 
 A ideia do produto, um assistente de finanças no estilo do Pierre sem Open Finance, foi minha. Discuti o MVP, a
