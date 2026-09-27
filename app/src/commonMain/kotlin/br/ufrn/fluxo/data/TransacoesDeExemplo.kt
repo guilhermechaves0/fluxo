@@ -14,6 +14,9 @@ private val mercado = Categoria(id = "mercado", nome = "Mercado")
 private val alimentacao = Categoria(id = "alimentacao", nome = "Alimentação")
 private val transporte = Categoria(id = "transporte", nome = "Transporte")
 
+/** Categorias oferecidas no formulário de lançamento. */
+val categoriasDeExemplo: List<Categoria> = listOf(alimentacao, mercado, moradia, transporte)
+
 private fun transacao(
     id: String,
     descricao: String,
