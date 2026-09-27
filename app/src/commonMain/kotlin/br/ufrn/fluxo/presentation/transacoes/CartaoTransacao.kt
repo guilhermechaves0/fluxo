@@ -1,5 +1,6 @@
 package br.ufrn.fluxo.presentation.transacoes
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,28 +12,37 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.ufrn.fluxo.dominio.Tipo
 import br.ufrn.fluxo.dominio.Transacao
+import br.ufrn.fluxo.dominio.formatarData
 import br.ufrn.fluxo.dominio.formatarReais
 
 /**
  * Cartão com descrição, categoria, data e valor de uma transação.
  *
  * Recebe só a transação e não guarda estado, então pode ser reaproveitado em outras telas,
- * como o detalhe de uma categoria.
+ * como o detalhe de uma categoria. Com [aoClicar], o cartão inteiro vira um botão, e o leitor
+ * de tela lê o conteúdo junto e anuncia a ação "abrir detalhes".
  */
 @Composable
-fun CartaoTransacao(transacao: Transacao, modifier: Modifier = Modifier) {
+fun CartaoTransacao(transacao: Transacao, modifier: Modifier = Modifier, aoClicar: (() -> Unit)? = null) {
     val corDoValor =
         when (transacao.tipo) {
             Tipo.RECEITA -> MaterialTheme.colorScheme.primary
             Tipo.DESPESA -> MaterialTheme.colorScheme.error
         }
+    val clicavel =
+        if (aoClicar == null) {
+            Modifier
+        } else {
+            Modifier.clickable(onClickLabel = "abrir detalhes", role = Role.Button, onClick = aoClicar)
+        }
     Card(modifier.fillMaxWidth()) {
         Row(
-            Modifier.padding(12.dp),
+            clicavel.padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -44,7 +54,7 @@ fun CartaoTransacao(transacao: Transacao, modifier: Modifier = Modifier) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    "${transacao.categoria?.nome ?: "Sem categoria"} · ${transacao.data}",
+                    "${transacao.categoria?.nome ?: "Sem categoria"} · ${formatarData(transacao.data)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

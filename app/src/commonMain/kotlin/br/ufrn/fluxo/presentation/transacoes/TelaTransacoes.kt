@@ -15,7 +15,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import br.ufrn.fluxo.dominio.Transacao
@@ -24,9 +26,10 @@ import br.ufrn.fluxo.dominio.porTipo
 import br.ufrn.fluxo.dominio.saldo
 
 /**
- * Tela das transações do mês, com saldo e filtro por tipo.
+ * Tela das transações do mês, com saldo e filtro por tipo. As mais recentes aparecem primeiro.
  *
- * A tela não guarda estado: recebe a lista e o filtro e avisa o FluxoApp pelos callbacks.
+ * A tela não guarda estado: recebe a lista e o filtro e avisa pelos callbacks quando o filtro
+ * muda, quando uma transação é tocada e quando o botão + é tocado. Quem navega é o NavHost.
  * Por isso os previews montam a tela cheia e a vazia só passando parâmetros.
  */
 @Composable
@@ -34,10 +37,11 @@ fun TelaTransacoes(
     transacoes: List<Transacao>,
     filtro: FiltroTransacoes,
     aoTrocarFiltro: (FiltroTransacoes) -> Unit,
+    aoAbrir: (id: String) -> Unit,
     aoAdicionar: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val visiveis = remember(transacoes, filtro) { transacoes.porTipo(filtro.tipo) }
+    val visiveis = remember(transacoes, filtro) { transacoes.porTipo(filtro.tipo).sortedByDescending { it.data } }
 
     Scaffold(
         modifier = modifier,
@@ -46,7 +50,7 @@ fun TelaTransacoes(
                 onClick = aoAdicionar,
                 modifier = Modifier.semantics { contentDescription = "Adicionar transação" },
             ) {
-                Text("+", style = MaterialTheme.typography.headlineSmall)
+                Text("+", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.clearAndSetSemantics {})
             }
         },
     ) { espacamento ->
@@ -56,7 +60,11 @@ fun TelaTransacoes(
                 .padding(espacamento)
                 .padding(horizontal = 16.dp),
         ) {
-            Text("Transações", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                "Transações",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.semantics { heading() },
+            )
             Text(
                 "Saldo do mês: ${formatarReais(transacoes.saldo())}",
                 style = MaterialTheme.typography.titleMedium,
@@ -70,7 +78,7 @@ fun TelaTransacoes(
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(visiveis, key = { it.id }) { transacao ->
-                        CartaoTransacao(transacao)
+                        CartaoTransacao(transacao, aoClicar = { aoAbrir(transacao.id) })
                     }
                 }
             }

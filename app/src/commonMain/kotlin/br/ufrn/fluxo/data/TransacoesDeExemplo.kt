@@ -35,7 +35,3 @@ val transacoesDeExemplo: List<Transacao> =
         transacao("t-05", "Corrida de aplicativo", centavos = 2_380, data = "2026-09-09", DESPESA, transporte),
         transacao("t-06", "Padaria", centavos = 4_590, data = "2026-09-10", DESPESA, alimentacao),
     )
-
-/** Despesa criada pelo botão +. O formulário de lançamento substitui este atalho na Sprint 1. */
-fun novaTransacaoDeExemplo(sequencia: Int): Transacao =
-    transacao("nova-$sequencia", "Café", centavos = 850, data = "2026-09-12", DESPESA, alimentacao)

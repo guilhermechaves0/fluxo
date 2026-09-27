@@ -16,6 +16,7 @@ fun TelaTransacoesCheiaPreview() {
             transacoes = transacoesDeExemplo,
             filtro = FiltroTransacoes.TODAS,
             aoTrocarFiltro = {},
+            aoAbrir = {},
             aoAdicionar = {},
         )
     }
@@ -29,6 +30,7 @@ fun TelaTransacoesVaziaPreview() {
             transacoes = emptyList(),
             filtro = FiltroTransacoes.TODAS,
             aoTrocarFiltro = {},
+            aoAbrir = {},
             aoAdicionar = {},
         )
     }
