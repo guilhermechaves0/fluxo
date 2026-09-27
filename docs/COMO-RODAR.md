@@ -29,6 +29,7 @@ O `local.properties` guarda o caminho do SDK na máquina e fica fora do reposit�
 | `mise run up` | Sobe a api (porta 8080) e o importador (porta 9090) com Docker Compose |
 | `mise run run:app` | Abre o app no desktop |
 | `mise run run:android` | Instala e abre o app no celular conectado por USB |
+| `mise run run:deeplink t-03` | Abre no celular o detalhe da transação `t-03` pelo link `fluxo://transacao/t-03` |
 | `mise run run:api` e `mise run run:importador` | Sobem cada serviço sem Docker |
 
 ## Conferir os serviços
