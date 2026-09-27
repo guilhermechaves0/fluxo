@@ -52,7 +52,7 @@ fun TelaDetalheTransacao(transacao: Transacao?, aoVoltar: () -> Unit, modifier: 
         val corDoValor =
             when (transacao.tipo) {
                 Tipo.RECEITA -> MaterialTheme.colorScheme.primary
-                Tipo.DESPESA -> MaterialTheme.colorScheme.error
+                Tipo.DESPESA -> MaterialTheme.colorScheme.onSurface
             }
         Text(
             transacao.descricao,
