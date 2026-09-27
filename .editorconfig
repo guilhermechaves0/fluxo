@@ -29,3 +29,7 @@ indent_style = tab
 
 [*.md]
 trim_trailing_whitespace = false
+
+# Código que o Compose gera em build/generated (a classe Res dos recursos) não segue o estilo do projeto.
+[**/build/generated/**]
+ktlint_standard = disabled

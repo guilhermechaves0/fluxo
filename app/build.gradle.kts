@@ -24,6 +24,7 @@ kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
         }
+        androidResources { enable = true } // leva os composeResources (fonte) para o APK
     }
 
     sourceSets {
@@ -36,6 +37,8 @@ kotlin {
             implementation(libs.compose.ui)
             implementation(libs.compose.uiToolingPreview) // anotação @Preview no commonMain
             implementation(libs.navigation.compose)
+            implementation(libs.material3.adaptive) // classe de largura da janela (layout em duas larguras)
+            implementation(libs.compose.components.resources) // fonte Figtree em composeResources
             implementation(libs.ktor.client.core) // chama a api (DIM0547)
             implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.content.negotiation)
@@ -62,6 +65,11 @@ kotlin {
 dependencies {
     // Usado pelo IDE para renderizar os @Preview a partir do alvo Android.
     androidRuntimeClasspath(libs.compose.uiTooling)
+}
+
+compose.resources {
+    packageOfResClass = "br.ufrn.fluxo.recursos"
+    publicResClass = false
 }
 
 compose.desktop {
