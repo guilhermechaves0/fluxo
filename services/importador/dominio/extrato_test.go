@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -149,6 +150,22 @@ func TestLerExtratoRecusaArquivoVazioOuDesconhecido(t *testing.T) {
 	_, err := LerExtrato(ler(t, "desconhecido.csv"))
 	if !errors.Is(err, ErrFormatoDesconhecido) {
 		t.Errorf("esperava ErrFormatoDesconhecido, obteve %v", err)
+	}
+}
+
+func TestLerExtratoExplicaQuandoChegaPDFOuImagem(t *testing.T) {
+	casos := map[string][]byte{
+		"PDF":      []byte("%PDF-1.7\n%âãÏÓ\n1 0 obj"),
+		"imagem":   {0x89, 'P', 'N', 'G', 0x0d, 0x0a},
+		"planilha": []byte("PK\x03\x04xl/workbook.xml"),
+	}
+	for nome, conteudo := range casos {
+		t.Run(nome, func(t *testing.T) {
+			_, err := LerExtrato(conteudo)
+			if !errors.Is(err, ErrFormatoDesconhecido) || !strings.Contains(err.Error(), "OFX ou CSV") {
+				t.Fatalf("esperava explicação pedindo OFX ou CSV, obteve %v", err)
+			}
+		})
 	}
 }
 

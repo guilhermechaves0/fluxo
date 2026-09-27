@@ -55,6 +55,10 @@ var (
 // LerExtrato reconhece o formato pelo conteúdo e converte o arquivo em lançamentos.
 // Aceita UTF-8 e Windows-1252, que é a codificação do OFX de vários bancos brasileiros.
 func LerExtrato(conteudo []byte) (Extrato, error) {
+	if tipo := tipoBinario(conteudo); tipo != "" {
+		return Extrato{}, fmt.Errorf("%w: o arquivo é %s, e o Fluxo lê extrato em OFX ou CSV. No Banco do Brasil, o "+
+			"OFX sai pelo internet banking, na opção Money 2000+ (ofx)", ErrFormatoDesconhecido, tipo)
+	}
 	texto := paraUTF8(conteudo)
 	texto = strings.TrimPrefix(texto, "\ufeff")
 	texto = strings.ReplaceAll(texto, "\r\n", "\n")
@@ -163,4 +167,18 @@ var windows1252 = [32]rune{
 	0x20AC, 0xFFFD, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0xFFFD,
 	0x017D, 0xFFFD, 0xFFFD, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0x02DC, 0x2122, 0x0161, 0x203A,
 	0x0153, 0xFFFD, 0x017E, 0x0178,
+}
+
+// tipoBinario reconhece pelos primeiros bytes os arquivos que o banco costuma compartilhar no
+// lugar do extrato em texto, para que a mensagem de erro diga o que chegou.
+func tipoBinario(conteudo []byte) string {
+	switch {
+	case bytes.HasPrefix(conteudo, []byte("%PDF")):
+		return "um PDF"
+	case bytes.HasPrefix(conteudo, []byte("\x89PNG")), bytes.HasPrefix(conteudo, []byte("\xff\xd8\xff")):
+		return "uma imagem"
+	case bytes.HasPrefix(conteudo, []byte("PK\x03\x04")):
+		return "uma planilha ou um arquivo compactado (XLSX ou ZIP)"
+	}
+	return ""
 }
