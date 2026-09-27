@@ -8,7 +8,6 @@ import br.ufrn.fluxo.aplicacao.LancamentoLido
 import br.ufrn.fluxo.aplicacao.LinhaIgnorada
 import br.ufrn.fluxo.dominio.Tipo
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -47,7 +46,7 @@ class ImportadorHttp(private val url: String, private val cliente: HttpClient) :
     }
 
     private suspend fun lerCorpo(resposta: HttpResponse): ExtratoJson = try {
-        resposta.body()
+        JSON.decodeFromString<ExtratoJson>(resposta.bodyAsText())
     } catch (e: SerializationException) {
         throw ImportadorIndisponivel(e)
     }
