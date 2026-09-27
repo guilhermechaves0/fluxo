@@ -20,6 +20,7 @@ import br.ufrn.fluxo.data.categoriasDeExemplo
 import br.ufrn.fluxo.data.transacoesDeExemplo
 import br.ufrn.fluxo.dominio.Transacao
 import br.ufrn.fluxo.dominio.formatarData
+import br.ufrn.fluxo.dominio.mesDoAno
 import br.ufrn.fluxo.presentation.detalhe.TelaDetalheTransacao
 import br.ufrn.fluxo.presentation.importacao.ArquivoEscolhido
 import br.ufrn.fluxo.presentation.importacao.EstadoDaImportacao
@@ -40,7 +41,7 @@ import kotlin.time.Clock
 /**
  * Grafo de navegação do app.
  *
- * A lista de transações e o filtro ficam aqui, acima do NavHost, para que as três telas vejam o
+ * A lista de transações, o mês mostrado e o filtro ficam aqui, acima do NavHost, para que as três telas vejam o
  * mesmo estado. As telas recebem lambdas e não conhecem o NavController. Na Sprint 2 este estado
  * vai para um ViewModel. Os testes passam [transacoesIniciais], [hoje] e [api] para ter dados fixos.
  */
@@ -55,6 +56,7 @@ fun FluxoNavegacao(
 ) {
     var transacoes by remember { mutableStateOf(transacoesIniciais) }
     var filtro by remember { mutableStateOf(FiltroTransacoes.TODAS) }
+    var mes by remember { mutableStateOf(hoje().mesDoAno) }
     var proximoId by remember { mutableStateOf(1) }
     var importacao by remember { mutableStateOf<EstadoDaImportacao>(EstadoDaImportacao.Inicial) }
     val escopo = rememberCoroutineScope()
@@ -83,7 +85,9 @@ fun FluxoNavegacao(
         composable<ListaDeTransacoes> {
             TelaTransacoes(
                 transacoes = transacoes,
+                mes = mes,
                 filtro = filtro,
+                aoTrocarMes = { mes = it },
                 aoTrocarFiltro = { filtro = it },
                 aoAbrir = { id -> navController.navigate(DetalheDaTransacao(id)) },
                 aoAdicionar = { navController.navigate(NovaTransacao) },
@@ -100,6 +104,7 @@ fun FluxoNavegacao(
                 aoConfirmar = {
                     (importacao as? EstadoDaImportacao.Previa)?.let { previa ->
                         transacoes = transacoes + previa.novas
+                        previa.novas.maxOfOrNull { it.data }?.let { mes = it.mesDoAno }
                         importacao = EstadoDaImportacao.Inicial
                         navController.popBackStack()
                     }
@@ -125,6 +130,7 @@ fun FluxoNavegacao(
                 aoSalvar = {
                     rascunho.paraTransacao(id = "manual-$proximoId")?.let { nova ->
                         transacoes = transacoes + nova
+                        mes = nova.data.mesDoAno
                         proximoId++
                         navController.popBackStack()
                     }
