@@ -17,6 +17,13 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- "Compartilhar" de outro app: o extrato em CSV ou OFX do app do banco abre na importação. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/*" />
+                <data android:mimeType="application/*" />
+            </intent-filter>
             <!-- Deep link: fluxo://transacao/t-03 abre o detalhe da transação t-03. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
