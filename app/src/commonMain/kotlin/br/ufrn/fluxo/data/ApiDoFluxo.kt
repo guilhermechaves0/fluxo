@@ -2,6 +2,7 @@ package br.ufrn.fluxo.data
 
 import br.ufrn.fluxo.dominio.Tipo
 import br.ufrn.fluxo.dominio.Transacao
+import br.ufrn.fluxo.dominio.categoriaPeloNome
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -93,8 +94,16 @@ private data class TransacaoJson(
     val valorCentavos: Long,
     val data: String,
     val tipo: String,
+    val categoria: String? = null,
 ) {
-    fun paraTransacao() = Transacao(id, descricao, valorCentavos, LocalDate.parse(data), Tipo.valueOf(tipo))
+    fun paraTransacao() = Transacao(
+        id,
+        descricao,
+        valorCentavos,
+        LocalDate.parse(data),
+        Tipo.valueOf(tipo),
+        categoria?.takeIf { it.isNotBlank() }?.let(::categoriaPeloNome),
+    )
 }
 
 @Serializable

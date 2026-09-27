@@ -32,10 +32,12 @@ class ApiDoFluxoTest {
     fun previaViraTransacoesDoDominio() = runTest {
         val corpo =
             """{"formato":"OFX","origem":"Nubank","transacoes":[{"id":"imp-nubank-1","descricao":"PADARIA",""" +
-                """"valorCentavos":4590,"data":"2026-09-06","tipo":"DESPESA"}],"ignorados":[{"posicao":3,"motivo":"x"}]}"""
+                """"valorCentavos":4590,"data":"2026-09-06","tipo":"DESPESA","categoria":"Restaurantes"}],""" +
+                """"ignorados":[{"posicao":3,"motivo":"x"}]}"""
         val extrato = api(HttpStatusCode.OK, corpo).previaDeImportacao("extrato.ofx", byteArrayOf(1))
         assertEquals("Nubank", extrato.origem)
         assertEquals(Tipo.DESPESA, extrato.transacoes.single().tipo)
+        assertEquals("restaurantes", extrato.transacoes.single().categoria?.id)
         assertEquals(listOf("x"), extrato.ignorados)
     }
 
