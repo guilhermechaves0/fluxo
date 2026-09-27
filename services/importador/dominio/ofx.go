@@ -1,4 +1,4 @@
-// Package dominio converte extratos bancários (OFX 1.x em SGML e CSV) em lançamentos.
+// Package dominio converte extratos bancários (OFX e CSV) em lançamentos.
 // É a camada de domínio do importador e não pode importar net/http, encoding/json nem
 // database/sql. O arch-go confere essa regra no CI (services/arch-go.yml).
 package dominio
@@ -43,21 +43,11 @@ const (
 	casasDecimais  = 2
 )
 
-// ParseSTMTTRN lê um bloco <STMTTRN>...</STMTTRN> do OFX 1.x, em que os campos não têm
-// tag de fechamento. Usa os campos TRNAMT, DTPOSTED, FITID e MEMO.
+// ParseSTMTTRN lê um bloco <STMTTRN>...</STMTTRN>. Aceita o OFX 1.x em SGML, em que os
+// campos não têm tag de fechamento, e o OFX 2.x em XML, em que têm. Usa TRNAMT, DTPOSTED,
+// FITID e MEMO; sem MEMO, a descrição vem de NAME.
 func ParseSTMTTRN(bloco string) (Lancamento, error) {
-	campos := map[string]string{}
-	for _, linha := range strings.Split(bloco, "\n") {
-		linha = strings.TrimSpace(linha)
-		if !strings.HasPrefix(linha, "<") || strings.HasPrefix(linha, "</") {
-			continue
-		}
-		fim := strings.Index(linha, ">")
-		if fim < 0 {
-			continue
-		}
-		campos[strings.ToUpper(linha[1:fim])] = strings.TrimSpace(linha[fim+1:])
-	}
+	campos := camposOFX(bloco)
 	if campos["TRNAMT"] == "" || campos["DTPOSTED"] == "" {
 		return Lancamento{}, fmt.Errorf("%w: TRNAMT e DTPOSTED", ErrCampoAusente)
 	}
@@ -65,7 +55,32 @@ func ParseSTMTTRN(bloco string) (Lancamento, error) {
 	if err != nil {
 		return Lancamento{}, err
 	}
-	return montar(campos["FITID"], data, campos["MEMO"], campos["TRNAMT"])
+	descricao := campos["MEMO"]
+	if descricao == "" {
+		descricao = campos["NAME"]
+	}
+	return montar(campos["FITID"], data, descricao, campos["TRNAMT"])
+}
+
+// camposOFX devolve o valor de cada tag do trecho. O valor vai até a próxima tag, seja ela
+// de abertura ou de fechamento, então funciona com e sem quebra de linha entre os campos.
+func camposOFX(trecho string) map[string]string {
+	campos := map[string]string{}
+	for _, parte := range strings.Split(trecho, "<") {
+		tag, valor, ok := strings.Cut(parte, ">")
+		if !ok || tag == "" || strings.HasPrefix(tag, "/") || strings.HasPrefix(tag, "?") {
+			continue
+		}
+		valor = desfazerEntidades(strings.TrimSpace(valor))
+		if valor != "" {
+			campos[strings.ToUpper(strings.TrimSpace(tag))] = valor
+		}
+	}
+	return campos
+}
+
+func desfazerEntidades(s string) string {
+	return strings.NewReplacer("&amp;", "&", "&lt;", "<", "&gt;", ">", "&quot;", "\"", "&apos;", "'").Replace(s)
 }
 
 // ParseLinhaCSV lê uma linha no formato "data;descricao;valor", com data AAAA-MM-DD e
