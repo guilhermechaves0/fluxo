@@ -1,6 +1,7 @@
 package br.ufrn.fluxo.dominio
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.number
 import kotlin.math.abs
 
 // Entidades e regras usadas pelo app e pela api. Valores em dinheiro são Long em centavos
@@ -61,4 +62,49 @@ fun formatarReais(centavos: Long): String {
             .reversed()
     val resto = (absoluto % CENTAVOS_POR_REAL).toString().padStart(2, '0')
     return "${sinal}R\$ $reais,$resto"
+}
+
+private const val CASAS_DE_CENTAVOS = 2
+private const val MAXIMO_DE_DIGITOS_EM_REAIS = 12
+private const val PARTES_DA_DATA = 3
+private const val DIGITOS_DO_ANO = 4
+
+/**
+ * Lê um valor digitado em reais e devolve os centavos, ou `null` se o texto não for um valor.
+ *
+ * Aceita "12", "12,5", "1.234,56" e "R$ 45,90". O ponto com uma ou duas casas no fim também vale
+ * como vírgula ("45.90"), porque é comum digitar assim no teclado numérico.
+ */
+fun lerReais(texto: String): Long? {
+    val limpo = texto.trim().removePrefix("R$").trim()
+    val separador = limpo.lastIndexOfAny(charArrayOf(',', '.'))
+    val casas = limpo.length - separador - 1
+    val temCentavos = separador >= 0 && (limpo[separador] == ',' || casas in 1..CASAS_DE_CENTAVOS)
+    val reais = (if (temCentavos) limpo.substring(0, separador) else limpo).replace(".", "")
+    val centavos = if (temCentavos) limpo.substring(separador + 1) else ""
+
+    val valido =
+        reais.all(Char::isDigit) &&
+            centavos.all(Char::isDigit) &&
+            centavos.length <= CASAS_DE_CENTAVOS &&
+            reais.length <= MAXIMO_DE_DIGITOS_EM_REAIS &&
+            (reais + centavos).isNotEmpty()
+    if (!valido) return null
+    return (reais.ifEmpty { "0" }.toLong() * CENTAVOS_POR_REAL) +
+        centavos.padEnd(CASAS_DE_CENTAVOS, '0').toLong()
+}
+
+/** Formata a data como no Brasil: 2026-09-05 vira "05/09/2026". */
+fun formatarData(data: LocalDate): String =
+    "${data.day.toString().padStart(2, '0')}/${data.month.number.toString().padStart(2, '0')}/${data.year}"
+
+/** Lê uma data no formato dd/mm/aaaa. Devolve `null` para texto fora do formato ou data que não existe. */
+fun lerData(texto: String): LocalDate? {
+    val partes = texto.trim().split("/")
+    val numeros = partes.mapNotNull { it.toIntOrNull() }
+    if (numeros.size != PARTES_DA_DATA || partes.size != PARTES_DA_DATA || partes.last().length != DIGITOS_DO_ANO) {
+        return null
+    }
+    val (dia, mes, ano) = numeros
+    return runCatching { LocalDate(ano, mes, dia) }.getOrNull()
 }

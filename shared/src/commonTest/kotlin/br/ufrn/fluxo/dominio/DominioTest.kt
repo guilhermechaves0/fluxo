@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 class DominioTest {
     private val mercado = Categoria(id = "mercado", nome = "Mercado")
@@ -43,5 +44,33 @@ class DominioTest {
         assertFailsWith<IllegalArgumentException> {
             Transacao("t4", "Estorno", 0, LocalDate.parse("2026-09-10"), Tipo.DESPESA)
         }
+    }
+
+    @Test
+    fun leReaisNosFormatosQueOUsuarioDigita() {
+        assertEquals(1_200L, lerReais("12"))
+        assertEquals(1_250L, lerReais("12,5"))
+        assertEquals(123_456L, lerReais("1.234,56"))
+        assertEquals(4_590L, lerReais("R$ 45,90"))
+        assertEquals(4_590L, lerReais("45.90"))
+        assertEquals(123_400L, lerReais("1.234"))
+    }
+
+    @Test
+    fun recusaTextoQueNaoEValor() {
+        assertNull(lerReais(""))
+        assertNull(lerReais("abc"))
+        assertNull(lerReais("-45,90"))
+        assertNull(lerReais("12,345"))
+        assertNull(lerReais(","))
+    }
+
+    @Test
+    fun formataELeDatasNoPadraoBrasileiro() {
+        assertEquals("05/09/2026", formatarData(LocalDate.parse("2026-09-05")))
+        assertEquals(LocalDate.parse("2026-09-27"), lerData("27/09/2026"))
+        assertNull(lerData("31/02/2026"))
+        assertNull(lerData("2026-09-27"))
+        assertNull(lerData("27/09/26"))
     }
 }
