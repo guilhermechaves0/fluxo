@@ -94,6 +94,9 @@ fun lerReais(texto: String): Long? {
         centavos.padEnd(CASAS_DE_CENTAVOS, '0').toLong()
 }
 
+/** Valor sem "R$" e sem sinal, para listas em que o sinal vem do contexto: 123456 vira "1.234,56". */
+fun formatarValor(centavos: Long): String = formatarReais(abs(centavos)).removePrefix("R$ ")
+
 /** Formata a data como no Brasil: 2026-09-05 vira "05/09/2026". */
 fun formatarData(data: LocalDate): String =
     "${data.day.toString().padStart(2, '0')}/${data.month.number.toString().padStart(2, '0')}/${data.year}"
