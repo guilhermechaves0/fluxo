@@ -2,6 +2,7 @@ package br.ufrn.fluxo.presentation.transacoes
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -92,7 +93,11 @@ fun TelaTransacoes(
             if (visiveis.isEmpty()) {
                 EstadoVazio(filtro, mes)
             } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // O respiro no fim deixa a última transação acima do botão +, que flutua sobre a lista.
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(bottom = 88.dp),
+                ) {
                     items(visiveis, key = { it.id }) { transacao ->
                         CartaoTransacao(transacao, aoClicar = { aoAbrir(transacao.id) })
                     }
