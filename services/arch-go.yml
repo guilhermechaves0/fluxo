@@ -1,7 +1,7 @@
 # Regra de dependência do serviço Go, conferida pelo arch-go no CI.
 #
-# O pacote importador/dominio só interpreta OFX e CSV. Se ele importar net/http,
-# encoding/json ou database/sql, a verificação falha.
+# O pacote importador/dominio só interpreta texto (OFX, CSV e as linhas da fatura em PDF). Se ele
+# importar net/http, encoding/json, database/sql ou a biblioteca de PDF, a verificação falha.
 version: 1
 threshold:
   compliance: 100
@@ -13,3 +13,5 @@ dependenciesRules:
         - "net/http"
         - "encoding/json"
         - "database/sql"
+      external:
+        - "github.com/ledongthuc/pdf" # a leitura de PDF fica em importador/pdftexto (ADR 0002)

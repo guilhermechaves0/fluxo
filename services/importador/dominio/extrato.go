@@ -19,6 +19,7 @@ type Formato string
 const (
 	FormatoOFX Formato = "OFX"
 	FormatoCSV Formato = "CSV"
+	FormatoPDF Formato = "PDF"
 )
 
 // Extrato é o resultado da leitura de um arquivo inteiro.

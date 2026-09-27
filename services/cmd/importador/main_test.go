@@ -62,6 +62,22 @@ func TestImportar(t *testing.T) {
 	}
 }
 
+func TestImportarFaturaEmPDF(t *testing.T) {
+	pdf, err := os.ReadFile("../../importador/dominio/testdata/bb-fatura.pdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := httptest.NewRecorder()
+	rotas().ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/importar", strings.NewReader(string(pdf))))
+	var r resposta
+	if err := json.NewDecoder(rec.Body).Decode(&r); err != nil || rec.Code != http.StatusOK {
+		t.Fatalf("esperava 200 com JSON, obteve %d (%v)", rec.Code, err)
+	}
+	if r.Formato != "PDF" || r.Origem != "Banco do Brasil (fatura do cartão)" || len(r.Lancamentos) != 8 {
+		t.Fatalf("resposta inesperada: %+v", r)
+	}
+}
+
 func TestImportarDevolveOsLancamentos(t *testing.T) {
 	ofx, _ := os.ReadFile("../../importador/dominio/testdata/nubank-conta.ofx")
 	rec := httptest.NewRecorder()

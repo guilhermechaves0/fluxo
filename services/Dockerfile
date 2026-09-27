@@ -3,8 +3,8 @@
 FROM golang:1.27-alpine AS build
 WORKDIR /build
 
-# O módulo ainda não tem dependência externa, por isso não existe go.sum.
-COPY go.mod ./
+# go.mod e go.sum antes do código, para o download das dependências ficar em cache.
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
