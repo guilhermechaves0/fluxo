@@ -169,6 +169,17 @@ func TestLerExtratoExplicaQuandoChegaPDFOuImagem(t *testing.T) {
 	}
 }
 
+func TestDataQueNaoExisteNoCalendarioEhRecusada(t *testing.T) {
+	for _, data := range []string{"31/02/2026", "29/02/2026", "2026-04-31"} {
+		if _, err := dataCSV(data); !errors.Is(err, ErrDataInvalida) {
+			t.Errorf("%s deveria ser recusada, obteve %v", data, err)
+		}
+	}
+	if d, err := dataCSV("29/02/2028"); err != nil || d != "2028-02-29" {
+		t.Errorf("29/02/2028 existe (ano bissexto): %s, %v", d, err)
+	}
+}
+
 func TestLerExtratoAceitaOFormatoAntigoSemCabecalho(t *testing.T) {
 	extrato, err := LerExtrato([]byte("2026-09-06;Supermercado;-312,45\n05/09/2026;Salário;4500.00\n"))
 	if err != nil {

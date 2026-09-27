@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 )
 
 const (
@@ -285,8 +286,8 @@ func validarData(iso string) (string, error) {
 			return "", fmt.Errorf("%w: %q", ErrDataInvalida, iso)
 		}
 	}
-	mes, dia := iso[5:7], iso[8:10]
-	if mes < "01" || mes > "12" || dia < "01" || dia > "31" {
+	// time.Parse recusa o que não existe no calendário, como 31/02 ou 29/02 fora de ano bissexto.
+	if _, err := time.Parse(time.DateOnly, iso); err != nil {
 		return "", fmt.Errorf("%w: %q", ErrDataInvalida, iso)
 	}
 	return iso, nil

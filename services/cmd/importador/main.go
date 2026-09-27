@@ -1,13 +1,14 @@
 // Serviço importador do Fluxo (DIM0547).
 //
-// Recebe extratos bancários em OFX ou CSV e devolve os lançamentos. Expõe /health e
-// POST /importar, que lê o corpo da requisição com o parser de importador/dominio. Usa
-// apenas a biblioteca padrão.
+// Recebe extratos bancários em OFX, CSV ou PDF (fatura do cartão do Banco do Brasil) e devolve
+// os lançamentos. Expõe /health e POST /importar, que lê o corpo da requisição com o parser de
+// importador/dominio. Fora a leitura de PDF (ADR 0002), usa só a biblioteca padrão.
 package main
 
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/guilhermechaves0/fluxo/services/importador/dominio"
+	"github.com/guilhermechaves0/fluxo/services/importador/pdftexto"
 )
 
 const tamanhoMaximo = 5 << 20 // 5 MB: um extrato de vários anos ainda cabe com folga
@@ -65,7 +67,7 @@ func importar(w http.ResponseWriter, r *http.Request) {
 		problema(w, http.StatusBadRequest, "corpo-invalido", "Não consegui ler o corpo da requisição.")
 		return
 	}
-	extrato, err := dominio.LerExtrato(conteudo)
+	extrato, err := ler(conteudo)
 	switch {
 	case errors.Is(err, dominio.ErrArquivoVazio):
 		problema(w, http.StatusBadRequest, "extrato-vazio", "O arquivo está vazio.")
@@ -78,6 +80,18 @@ func importar(w http.ResponseWriter, r *http.Request) {
 		"lancamentos", len(extrato.Lancamentos), "ignorados", len(extrato.Ignorados))
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(paraResposta(extrato))
+}
+
+// ler manda o PDF para a extração de texto antes do domínio; OFX e CSV vão direto.
+func ler(conteudo []byte) (dominio.Extrato, error) {
+	if !pdftexto.EhPDF(conteudo) {
+		return dominio.LerExtrato(conteudo)
+	}
+	linhas, err := pdftexto.Linhas(conteudo)
+	if err != nil {
+		return dominio.Extrato{}, fmt.Errorf("%w: %v", dominio.ErrFormatoDesconhecido, err)
+	}
+	return dominio.LerTextoDeFatura(linhas)
 }
 
 type resposta struct {

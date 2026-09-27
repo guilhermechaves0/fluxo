@@ -25,6 +25,8 @@ com ajuda da ferramenta.
 |---|---|---|
 | Navegação, formulário de lançamento e detalhe da transação | Para gerar a primeira versão das telas, das rotas e da validação a partir do exemplo `tarefas-compose` da disciplina | Testes de interface e de regra, ktlint e detekt, além do uso do app no celular |
 | Deep link | Para declarar o link no grafo de navegação e no manifesto do Android | Link aberto no celular com `mise run run:deeplink` |
+| Importação de extratos no importador em Go, na api e no app | Para gerar a primeira versão da leitura de OFX e CSV, das rotas e da tela de importação | Testes com extratos sintéticos de cada banco e importação dos meus extratos reais pelo celular |
+| Leitura da fatura do cartão em PDF | Para escrever a leitura a partir de uma versão mascarada do texto da fatura, sem os lançamentos, e para rascunhar a ADR 0002 | Teste com uma fatura sintética e conferência de que a soma lida bate com o total da minha fatura real |
 
 ## Decisões minhas
 
