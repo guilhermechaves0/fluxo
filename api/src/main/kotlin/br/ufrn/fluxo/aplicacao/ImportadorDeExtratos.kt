@@ -22,6 +22,8 @@ data class LancamentoLido(
     val valorCentavos: Long,
     val descricao: String,
     val tipo: Tipo,
+    /** Como o banco classifica o lançamento, quando o extrato informa. */
+    val categoria: String? = null,
 )
 
 /** Bloco OFX ou linha CSV que não virou lançamento. [posicao] conta a partir de 1. */

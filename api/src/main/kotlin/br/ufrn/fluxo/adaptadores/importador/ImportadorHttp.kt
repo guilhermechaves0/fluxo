@@ -82,6 +82,7 @@ private data class ExtratoJson(
                 valorCentavos = it.valorCentavos,
                 descricao = it.descricao,
                 tipo = Tipo.valueOf(it.tipo),
+                categoria = it.categoria,
             )
         },
         ignorados = ignorados.map { LinhaIgnorada(it.posicao, it.motivo) },
@@ -95,6 +96,7 @@ private data class LancamentoJson(
     val valorCentavos: Long,
     val descricao: String,
     val tipo: String,
+    val categoria: String? = null,
 )
 
 @Serializable
