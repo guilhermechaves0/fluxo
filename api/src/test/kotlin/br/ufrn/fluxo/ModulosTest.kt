@@ -1,5 +1,7 @@
 package br.ufrn.fluxo
 
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.engine.HttpClientEngine
 import org.koin.test.verify.verify
 import kotlin.test.Test
 
@@ -7,6 +9,10 @@ import kotlin.test.Test
 class ModulosTest {
     @Test
     fun grafoDeDependenciasResolve() {
-        modulosDaAplicacao().verify()
+        // O HttpClient é montado pela função clienteDoImportador(), não pelo Koin: a engine e a
+        // configuração dele não são dependências do grafo.
+        modulosDaAplicacao("http://localhost:9090").verify(
+            extraTypes = listOf(HttpClientEngine::class, HttpClientConfig::class),
+        )
     }
 }
