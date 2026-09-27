@@ -27,6 +27,7 @@ type Lancamento struct {
 	ValorCentavos int64
 	Descricao     string
 	Tipo          Tipo
+	Categoria     string // como o banco classifica; vazia quando o extrato não informa
 }
 
 // Erros de interpretação, que podem ser comparados com errors.Is.

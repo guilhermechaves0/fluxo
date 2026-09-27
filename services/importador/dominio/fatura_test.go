@@ -14,7 +14,9 @@ var faturaDeExemplo = []string{
 	"SALDO FATURA ANTERIOR BR R$ 1.200,00",
 	"Pagamentos/Créditos",
 	"05/08 PGTO. DEBITO CONTA 0000 BR R$ -1.200,00",
+	"Restaurantes",
 	"12/08 PADARIA EXEMPLO NATAL BR R$ 45,90",
+	"Serviços",
 	"20/08 LOJA ONLINE EXEMPLO US R$ 110,00",
 	"*** 20,00 USD",
 	"Cotação do Dólar de 20/08: R$ 5,5000",
@@ -36,12 +38,15 @@ func TestLerTextoDeFatura(t *testing.T) {
 		t.Errorf("formato ou origem errados: %s, %s", extrato.Formato, extrato.Origem)
 	}
 	queridos := []Lancamento{
-		{Data: "2026-08-05", ValorCentavos: 120000, Descricao: "PGTO. DEBITO CONTA 0000", Tipo: Receita},
-		{Data: "2026-08-12", ValorCentavos: 4590, Descricao: "PADARIA EXEMPLO NATAL", Tipo: Despesa},
-		{Data: "2026-08-20", ValorCentavos: 11000, Descricao: "LOJA ONLINE EXEMPLO", Tipo: Despesa},
-		{Data: "2026-08-20", ValorCentavos: 385, Descricao: "IOF - COMPRA NO EXTERIOR", Tipo: Despesa},
-		{Data: "2025-12-30", ValorCentavos: 8000, Descricao: "LOJA ANTIGA PARC 09/10 NATAL", Tipo: Despesa},
-		{Data: "2026-08-12", ValorCentavos: 4590, Descricao: "PADARIA EXEMPLO NATAL", Tipo: Despesa},
+		{Data: "2026-08-05", ValorCentavos: 120000, Descricao: "PGTO. DEBITO CONTA 0000", Tipo: Receita,
+			Categoria: "Pagamentos/Créditos"},
+		{Data: "2026-08-12", ValorCentavos: 4590, Descricao: "PADARIA EXEMPLO NATAL", Tipo: Despesa, Categoria: "Restaurantes"},
+		{Data: "2026-08-20", ValorCentavos: 11000, Descricao: "LOJA ONLINE EXEMPLO", Tipo: Despesa, Categoria: "Serviços"},
+		{Data: "2026-08-20", ValorCentavos: 385, Descricao: "IOF - COMPRA NO EXTERIOR", Tipo: Despesa, Categoria: "Serviços"},
+		{Data: "2025-12-30", ValorCentavos: 8000, Descricao: "LOJA ANTIGA PARC 09/10 NATAL", Tipo: Despesa,
+			Categoria: "Compras parceladas"},
+		{Data: "2026-08-12", ValorCentavos: 4590, Descricao: "PADARIA EXEMPLO NATAL", Tipo: Despesa,
+			Categoria: "Compras parceladas"},
 	}
 	if len(extrato.Lancamentos) != len(queridos) {
 		t.Fatalf("esperava %d lançamentos, obteve %+v", len(queridos), extrato.Lancamentos)
@@ -57,8 +62,8 @@ func TestLerTextoDeFatura(t *testing.T) {
 		t.Error("duas compras iguais no mesmo dia precisam de identificadores diferentes")
 	}
 	ignorados := extrato.Ignorados
-	if len(ignorados) != 1 || ignorados[0].Posicao != 15 || !strings.HasPrefix(ignorados[0].Motivo, "data inválida") {
-		t.Errorf("esperava só a data 31/02 ignorada, na linha 15: %+v", ignorados)
+	if len(ignorados) != 1 || ignorados[0].Posicao != 17 || !strings.HasPrefix(ignorados[0].Motivo, "data inválida") {
+		t.Errorf("esperava só a data 31/02 ignorada, na linha 17: %+v", ignorados)
 	}
 }
 
@@ -74,5 +79,23 @@ func TestLerTextoDeFaturaRecusaOQueNaoEhFaturaDoBB(t *testing.T) {
 				t.Fatalf("esperava ErrFormatoDesconhecido, obteve %v", err)
 			}
 		})
+	}
+}
+
+func TestTituloDeSecaoDeixaDeForaSaldoCotacaoETitular(t *testing.T) {
+	casos := map[string]bool{
+		"Restaurantes":                         true,
+		"Compras parceladas":                   true,
+		"Pagamentos/Créditos":                  true,
+		"SALDO FATURA ANTERIOR BR R$ 1.200,00": false,
+		"*** 20,00 USD":                        false,
+		"Cotação do Dólar de 20/08: R$ 5,5000": false,
+		"FULANO DE TAL (Cartão 1234)":          false,
+		"":                                     false,
+	}
+	for linha, esperado := range casos {
+		if tituloDeSecao(linha) != esperado {
+			t.Errorf("tituloDeSecao(%q) deveria ser %v", linha, esperado)
+		}
 	}
 }

@@ -21,7 +21,7 @@ type layoutCSV struct {
 	cartao                      bool // na fatura do cartão, valor positivo é gasto
 	data, descricao, detalhe    int
 	valor, entrada, saida, tipo int
-	id, parcela                 int
+	id, parcela, categoria      int
 }
 
 var nomesDeColuna = map[string][]string{
@@ -34,6 +34,7 @@ var nomesDeColuna = map[string][]string{
 	"tipo":      {"tipo lancamento", "tipo de lancamento"},
 	"id":        {"identificador"},
 	"parcela":   {"parcela"},
+	"categoria": {"categoria"},
 }
 
 func lerCSV(texto string) (Extrato, error) {
@@ -114,7 +115,8 @@ func reconhecer(cabecalho []string) (layoutCSV, bool) {
 		return sem
 	}
 	l := layoutCSV{data: achar("data"), descricao: achar("descricao"), valor: achar("valor"), entrada: achar("entrada"),
-		saida: achar("saida"), tipo: achar("tipo"), id: achar("id"), parcela: achar("parcela")}
+		saida: achar("saida"), tipo: achar("tipo"), id: achar("id"), parcela: achar("parcela"),
+		categoria: achar("categoria")}
 	l.detalhe = achar("detalhe", l.descricao)
 	temValor := l.valor != sem || (l.entrada != sem && l.saida != sem)
 	if l.data == sem || l.descricao == sem || !temValor {
@@ -204,7 +206,8 @@ func (l layoutCSV) lancamento(campos []string) (Lancamento, string) {
 	case strings.HasPrefix(t, "entrada") || strings.HasPrefix(t, "credito"):
 		tipo = Receita
 	}
-	return Lancamento{IDExterno: campo(l.id), Data: data, ValorCentavos: centavos, Descricao: descricao, Tipo: tipo}, ""
+	return Lancamento{IDExterno: campo(l.id), Data: data, ValorCentavos: centavos, Descricao: descricao, Tipo: tipo,
+		Categoria: campo(l.categoria)}, ""
 }
 
 func (l layoutCSV) centavos(campo func(int) string) (int64, error) {

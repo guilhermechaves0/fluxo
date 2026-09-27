@@ -107,6 +107,7 @@ type lancamentoJSON struct {
 	ValorCentavos int64  `json:"valorCentavos"`
 	Descricao     string `json:"descricao"`
 	Tipo          string `json:"tipo"`
+	Categoria     string `json:"categoria,omitempty"`
 }
 
 type ignoradoJSON struct {
@@ -119,7 +120,7 @@ func paraResposta(e dominio.Extrato) resposta {
 		Ignorados: []ignoradoJSON{}}
 	for _, l := range e.Lancamentos {
 		r.Lancamentos = append(r.Lancamentos, lancamentoJSON{IDExterno: l.IDExterno, Data: l.Data,
-			ValorCentavos: l.ValorCentavos, Descricao: l.Descricao, Tipo: string(l.Tipo)})
+			ValorCentavos: l.ValorCentavos, Descricao: l.Descricao, Tipo: string(l.Tipo), Categoria: l.Categoria})
 	}
 	for _, i := range e.Ignorados {
 		r.Ignorados = append(r.Ignorados, ignoradoJSON{Posicao: i.Posicao, Motivo: i.Motivo})
