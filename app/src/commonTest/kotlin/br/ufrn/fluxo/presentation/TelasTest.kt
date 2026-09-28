@@ -47,7 +47,13 @@ class TelasTest {
     private fun ComposeUiTest.abrirApp() {
         setContent {
             navegacao = rememberNavController()
-            FluxoTema { FluxoNavegacao(navController = navegacao, hoje = { LocalDate(2026, 9, 27) }) }
+            FluxoTema {
+                FluxoNavegacao(
+                    navController = navegacao,
+                    transacoesIniciais = transacoesDeExemplo,
+                    hoje = { LocalDate(2026, 9, 27) },
+                )
+            }
         }
     }
 
@@ -190,6 +196,7 @@ class TelasTest {
             FluxoTema {
                 FluxoNavegacao(
                     navController = navegacao,
+                    transacoesIniciais = transacoesDeExemplo,
                     hoje = { LocalDate(2026, 9, 27) },
                     api = api,
                     arquivoCompartilhado = ArquivoEscolhido("extrato-bb.csv", "Data;Valor".encodeToByteArray()),
@@ -253,13 +260,28 @@ class TelasTest {
     fun janelaLargaMostraOPainelDoMesAoLadoDaLista() = runComposeUiTest {
         setContent {
             navegacao = rememberNavController()
-            FluxoTema { FluxoNavegacao(navController = navegacao, hoje = { LocalDate(2026, 9, 27) }, largo = true) }
+            FluxoTema {
+                FluxoNavegacao(
+                    navController = navegacao,
+                    transacoesIniciais = transacoesDeExemplo,
+                    hoje = { LocalDate(2026, 9, 27) },
+                    largo = true,
+                )
+            }
         }
         // A linha do painel junta nome, valor e percentual; o percentual só existe no painel.
         onNode(hasText("Moradia") and hasText("80%")).assertIsDisplayed()
         onNodeWithText("Padaria").assertIsDisplayed()
         onNode(hasText("Mercado") and hasText("17%")).performClick()
         onNodeWithText("Supermercado").assertIsDisplayed()
+        onNodeWithText("Aluguel").assertDoesNotExist()
+    }
+
+    @Test
+    fun appComecaVazioESemTransacoesDeExemplo() = runComposeUiTest {
+        setContent { FluxoTema { FluxoNavegacao(hoje = { LocalDate(2026, 9, 27) }) } }
+        onNodeWithText("Nada entrou nem saiu em setembro de 2026.").assertIsDisplayed()
+        onNodeWithText("Nenhuma transação em setembro de 2026", substring = true).assertIsDisplayed()
         onNodeWithText("Aluguel").assertDoesNotExist()
     }
 

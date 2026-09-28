@@ -17,7 +17,6 @@ import androidx.navigation.toRoute
 import br.ufrn.fluxo.data.ApiDoFluxo
 import br.ufrn.fluxo.data.FalhaNaApi
 import br.ufrn.fluxo.data.categoriasDeExemplo
-import br.ufrn.fluxo.data.transacoesDeExemplo
 import br.ufrn.fluxo.dominio.Transacao
 import br.ufrn.fluxo.dominio.formatarData
 import br.ufrn.fluxo.dominio.mesDoAno
@@ -50,7 +49,7 @@ import kotlin.time.Clock
 fun FluxoNavegacao(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    transacoesIniciais: List<Transacao> = transacoesDeExemplo,
+    transacoesIniciais: List<Transacao> = emptyList(),
     hoje: () -> LocalDate = { Clock.System.todayIn(TimeZone.currentSystemDefault()) },
     api: ApiDoFluxo = remember { ApiDoFluxo() },
     arquivoCompartilhado: ArquivoEscolhido? = null,
