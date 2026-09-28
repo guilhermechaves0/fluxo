@@ -76,6 +76,9 @@ func TestImportarFaturaEmPDF(t *testing.T) {
 	if r.Formato != "PDF" || r.Origem != "Banco do Brasil (fatura do cartão)" || len(r.Lancamentos) != 8 {
 		t.Fatalf("resposta inesperada: %+v", r)
 	}
+	if r.Lancamentos[1].Categoria != "Restaurantes" {
+		t.Errorf("a seção da fatura deveria virar categoria: %+v", r.Lancamentos[1])
+	}
 }
 
 func TestImportarDevolveOsLancamentos(t *testing.T) {

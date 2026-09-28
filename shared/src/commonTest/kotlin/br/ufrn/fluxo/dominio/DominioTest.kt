@@ -91,4 +91,14 @@ class DominioTest {
         assertEquals(3, todas.doMes(LocalDate.parse("2026-09-27").mesDoAno).size)
         assertEquals("março de 2026", formatarMes(Mes(2026, 3)))
     }
+
+    @Test
+    fun categoriaPeloNomeGeraOMesmoIdSemAcento() {
+        assertEquals(
+            Categoria("pagamentos-creditos", "Pagamentos/Créditos"),
+            categoriaPeloNome(" Pagamentos/Créditos "),
+        )
+        assertEquals("saude", categoriaPeloNome("Saúde").id)
+        assertEquals("outros", categoriaPeloNome("***").id)
+    }
 }

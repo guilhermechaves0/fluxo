@@ -35,6 +35,9 @@ message Lancamento {
   int64 valor_centavos = 3;
   string descricao = 4;
   Tipo tipo = 5;
+  // Como o banco classifica o lançamento: seção da fatura ou coluna Categoria do CSV. Vazia quando o
+  // extrato não informa.
+  string categoria = 6;
 }
 
 message ImportarRequest {

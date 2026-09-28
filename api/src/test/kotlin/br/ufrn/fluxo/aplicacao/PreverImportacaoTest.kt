@@ -39,4 +39,12 @@ class PreverImportacaoTest {
         assertFailsWith<IllegalArgumentException> { prever()(ByteArray(0)) }
         assertFailsWith<ArquivoGrandeDemais> { prever()(ByteArray(5 * 1024 * 1024 + 1)) }
     }
+
+    @Test
+    fun aCategoriaDoBancoVemComIdSemAcento() = runTest {
+        val lido = LancamentoLido("x", dia, 4_590, "PAGAMENTO", Tipo.RECEITA, categoria = "Pagamentos/Créditos")
+        val categoria = prever(lido)(byteArrayOf(1)).transacoes.single().categoria
+        assertEquals("pagamentos-creditos", categoria?.id)
+        assertEquals("Pagamentos/Créditos", categoria?.nome)
+    }
 }

@@ -20,7 +20,8 @@ var (
 // do PDF. Os lançamentos ficam entre o cabeçalho "Data Descrição País Valor" e a linha "Total da
 // Fatura", às vezes em várias páginas. As linhas trazem só dia e mês, então o ano sai da data de
 // fechamento: mês depois do fechamento é do ano anterior, como numa parcela de dezembro numa
-// fatura de agosto. Na fatura, valor positivo é gasto e negativo é pagamento ou estorno.
+// fatura de agosto. Na fatura, valor positivo é gasto e negativo é pagamento ou estorno. O banco
+// agrupa as compras em seções ("Restaurantes", "Serviços"), e o título da seção vira a categoria.
 func LerTextoDeFatura(linhas []string) (Extrato, error) {
 	texto := strings.Join(linhas, "\n")
 	if !strings.Contains(strings.ToUpper(texto), "OUROCARD") {
@@ -34,6 +35,7 @@ func LerTextoDeFatura(linhas []string) (Extrato, error) {
 	extrato := Extrato{Formato: FormatoPDF, Origem: origemFaturaBB}
 	vistos := map[string]int{}
 	dentro := false
+	secao := ""
 	for i, linha := range linhas {
 		normal := normalizar(linha)
 		switch {
@@ -45,9 +47,13 @@ func LerTextoDeFatura(linhas []string) (Extrato, error) {
 		}
 		m := reLancamentoFatura.FindStringSubmatch(linha)
 		if m == nil {
-			continue // título de seção, saldo anterior, cotação e valor em moeda estrangeira
+			if tituloDeSecao(linha) {
+				secao = strings.TrimSpace(linha)
+			}
+			continue // saldo anterior, cotação e valor em moeda estrangeira
 		}
 		lancamento, motivo := lancamentoDaFatura(m, ano, mes)
+		lancamento.Categoria = secao
 		if motivo != "" {
 			extrato.Ignorados = append(extrato.Ignorados, Ignorado{Posicao: i + 1, Motivo: motivo})
 			continue
@@ -101,4 +107,17 @@ func fechamento(texto string) (int, int, error) {
 	mes, _ := strconv.Atoi(m[2])
 	ano, _ := strconv.Atoi(m[3])
 	return ano, mes, nil
+}
+
+const tamanhoMaximoDeSecao = 40
+
+// tituloDeSecao reconhece linhas como "Restaurantes" ou "Compras parceladas": texto curto, sem
+// números e sem valor. Saldo anterior, cotação e nome do titular com o final do cartão ficam de fora.
+func tituloDeSecao(linha string) bool {
+	linha = strings.TrimSpace(linha)
+	if linha == "" || len(linha) > tamanhoMaximoDeSecao || strings.Contains(linha, "R$") ||
+		strings.HasPrefix(normalizar(linha), "saldo") {
+		return false
+	}
+	return !strings.ContainsAny(linha, "0123456789*$")
 }

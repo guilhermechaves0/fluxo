@@ -1,6 +1,7 @@
 package br.ufrn.fluxo.aplicacao
 
 import br.ufrn.fluxo.dominio.Transacao
+import br.ufrn.fluxo.dominio.categoriaPeloNome
 
 private const val TAMANHO_MAXIMO = 5 * 1024 * 1024
 
@@ -26,6 +27,7 @@ class PreverImportacao(private val importador: ImportadorDeExtratos) {
                     valorCentavos = it.valorCentavos,
                     data = it.data,
                     tipo = it.tipo,
+                    categoria = it.categoria?.takeIf(String::isNotBlank)?.let(::categoriaPeloNome),
                 )
             },
             ignorados = extrato.ignorados + semValor.map { LinhaIgnorada(posicao = 0, motivo = "valor zero") },

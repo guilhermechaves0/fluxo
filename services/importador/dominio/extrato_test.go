@@ -68,9 +68,12 @@ func TestLerExtrato(t *testing.T) {
 		{
 			arquivo: "c6-fatura.csv", formato: FormatoCSV, origem: "C6 Bank (fatura do cartão)",
 			lancamentos: []Lancamento{
-				{Data: "2026-09-02", ValorCentavos: 15237, Descricao: "MERCADO EXEMPLO", Tipo: Despesa},
-				{Data: "2026-09-05", ValorCentavos: 9990, Descricao: "LOJA EXEMPLO (2/3)", Tipo: Despesa},
-				{Data: "2026-09-06", ValorCentavos: 2000, Descricao: "ESTORNO LOJA EXEMPLO", Tipo: Receita},
+				{Data: "2026-09-02", ValorCentavos: 15237, Descricao: "MERCADO EXEMPLO", Tipo: Despesa,
+					Categoria: "Supermercados"},
+				{Data: "2026-09-05", ValorCentavos: 9990, Descricao: "LOJA EXEMPLO (2/3)", Tipo: Despesa,
+					Categoria: "Departamento"},
+				{Data: "2026-09-06", ValorCentavos: 2000, Descricao: "ESTORNO LOJA EXEMPLO", Tipo: Receita,
+					Categoria: "Departamento"},
 			},
 		},
 		{
