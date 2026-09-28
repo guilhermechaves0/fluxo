@@ -24,7 +24,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import br.ufrn.fluxo.presentation.transacoes.CartaoTransacao
+import br.ufrn.fluxo.presentation.transacoes.LinhaDeTransacao
 
 /**
  * Importação de extrato em três passos: escolher o arquivo, conferir a prévia e confirmar.
@@ -106,8 +106,8 @@ private fun ColumnScope.PassoPrevia(
         Text(if (estado.novas.isEmpty()) "Nada novo para importar" else "Importar ${quantos(estado.novas.size)}")
     }
     OutlinedButton(onClick = aoEscolherArquivo, modifier = Modifier.fillMaxWidth()) { Text("Escolher outro arquivo") }
-    LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(estado.novas, key = { it.id }) { transacao -> CartaoTransacao(transacao) }
+    LazyColumn(Modifier.weight(1f)) {
+        items(estado.novas, key = { it.id }) { transacao -> LinhaDeTransacao(transacao) }
     }
 }
 

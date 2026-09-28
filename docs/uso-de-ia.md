@@ -28,6 +28,7 @@ com ajuda da ferramenta.
 | Importação de extratos no importador em Go, na api e no app | Para gerar a primeira versão da leitura de OFX e CSV, das rotas e da tela de importação | Testes com extratos sintéticos de cada banco e importação dos meus extratos reais pelo celular |
 | Leitura da fatura do cartão em PDF | Para escrever a leitura a partir de uma versão mascarada do texto da fatura, sem os lançamentos, e para rascunhar a ADR 0002 | Teste com uma fatura sintética e conferência de que a soma lida bate com o total da minha fatura real |
 | Categoria do banco na importação | Para usar as seções da fatura do Banco do Brasil e a coluna Categoria do CSV do C6 como categoria | Testes com arquivos sintéticos e conferência na minha fatura real, olhando só os nomes das seções |
+| Novo visual e layout em duas larguras | Para montar um plano de design a partir das minhas escolhas de tom, cor, layout e letra, e gerar a primeira versão do tema e das telas | Capturas das telas nos modos claro e escuro e nas duas larguras, testes de interface e uso no celular |
 
 ## Decisões minhas
 

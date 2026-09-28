@@ -5,46 +5,53 @@ import androidx.compose.ui.tooling.preview.Preview
 import br.ufrn.fluxo.data.transacoesDeExemplo
 import br.ufrn.fluxo.dominio.Mes
 import br.ufrn.fluxo.presentation.theme.FluxoTema
+import kotlinx.datetime.LocalDate
 
-// Previews da tela com lista cheia e vazia e do cartão de transação. Aparecem no Android Studio
-// ou no IntelliJ com o plugin Kotlin Multiplatform. Para ver no desktop, use ./gradlew :app:hotRunJvm.
+// Previews da tela cheia (clara e escura), vazia e larga, e da linha de transação. Aparecem no
+// Android Studio ou no IntelliJ com o plugin Kotlin Multiplatform.
 
-@Preview
+private val setembro = Mes(2026, 9)
+private val hoje = LocalDate(2026, 9, 10)
+
 @Composable
-fun TelaTransacoesCheiaPreview() {
-    FluxoTema {
+private fun Tela(escuro: Boolean = false, vazia: Boolean = false, largo: Boolean = false) {
+    FluxoTema(escuro = escuro) {
         TelaTransacoes(
-            transacoes = transacoesDeExemplo,
-            mes = Mes(2026, 9),
+            transacoes = if (vazia) emptyList() else transacoesDeExemplo,
+            mes = setembro,
             filtro = FiltroTransacoes.TODAS,
+            categoria = null,
+            hoje = hoje,
             aoTrocarMes = {},
             aoTrocarFiltro = {},
+            aoTrocarCategoria = {},
             aoAbrir = {},
             aoAdicionar = {},
+            largo = largo,
         )
     }
 }
 
 @Preview
 @Composable
-fun TelaTransacoesVaziaPreview() {
-    FluxoTema(escuro = true) {
-        TelaTransacoes(
-            transacoes = emptyList(),
-            mes = Mes(2026, 9),
-            filtro = FiltroTransacoes.TODAS,
-            aoTrocarMes = {},
-            aoTrocarFiltro = {},
-            aoAbrir = {},
-            aoAdicionar = {},
-        )
-    }
-}
+fun TelaTransacoesCheiaPreview() = Tela()
 
 @Preview
 @Composable
-fun CartaoTransacaoPreview() {
+fun TelaTransacoesEscuraPreview() = Tela(escuro = true)
+
+@Preview
+@Composable
+fun TelaTransacoesVaziaPreview() = Tela(vazia = true)
+
+@Preview(widthDp = 900, heightDp = 600)
+@Composable
+fun TelaTransacoesLargaPreview() = Tela(largo = true)
+
+@Preview
+@Composable
+fun LinhaDeTransacaoPreview() {
     FluxoTema {
-        CartaoTransacao(transacoesDeExemplo.first())
+        LinhaDeTransacao(transacoesDeExemplo[1])
     }
 }

@@ -38,6 +38,7 @@ class DominioTest {
         assertEquals("R\$ 1.234,56", formatarReais(123_456))
         assertEquals("-R\$ 45,90", formatarReais(-4_590))
         assertEquals("R\$ 0,05", formatarReais(5))
+        assertEquals("1.234,56", formatarValor(-123_456))
     }
 
     @Test

@@ -2,10 +2,12 @@ package br.ufrn.fluxo.presentation
 
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -45,7 +47,13 @@ class TelasTest {
     private fun ComposeUiTest.abrirApp() {
         setContent {
             navegacao = rememberNavController()
-            FluxoTema { FluxoNavegacao(navController = navegacao, hoje = { LocalDate(2026, 9, 27) }) }
+            FluxoTema {
+                FluxoNavegacao(
+                    navController = navegacao,
+                    transacoesIniciais = transacoesDeExemplo,
+                    hoje = { LocalDate(2026, 9, 27) },
+                )
+            }
         }
     }
 
@@ -55,16 +63,18 @@ class TelasTest {
     }
 
     @Test
-    fun listaMostraOSaldoEOTituloComoCabecalho() = runComposeUiTest {
+    fun listaMostraOQueSaiuEOQueEntrouEOMesComoCabecalho() = runComposeUiTest {
         abrirApp()
-        onNodeWithText("Saldo do mês: R$ 3.417,85").assertIsDisplayed()
-        onNode(isHeading()).assertTextEquals("Transações")
+        onNodeWithText("Saíram R\$ 1.882,15", substring = true).assertIsDisplayed()
+        onNodeWithText("entraram R\$ 5.300,00", substring = true).assertIsDisplayed()
+        onNodeWithText("Setembro de 2026").assert(isHeading())
+        onNodeWithText("10 de setembro").assert(isHeading())
     }
 
     @Test
     fun filtroDeReceitasEscondeAsDespesas() = runComposeUiTest {
         abrirApp()
-        onNodeWithText("Receitas").performClick()
+        onNodeWithText("Entradas").performClick()
         onNodeWithText("Salário").assertIsDisplayed()
         onNodeWithText("Aluguel").assertDoesNotExist()
     }
@@ -72,11 +82,11 @@ class TelasTest {
     @Test
     fun cartaoAbreODetalheEVoltarRetornaParaALista() = runComposeUiTest {
         abrirApp()
-        onNodeWithText("Aluguel").performClick()
-        onNode(isHeading()).assertTextEquals("Aluguel")
-        onNodeWithText("Moradia").assertIsDisplayed()
+        onNodeWithText("Padaria").performClick()
+        onNode(isHeading()).assertTextEquals("Padaria")
+        onNodeWithText("Alimentação").assertIsDisplayed()
         onNodeWithText("Voltar").performClick()
-        onNodeWithText("Saldo do mês: R$ 3.417,85").assertIsDisplayed()
+        onNodeWithText("Saíram R\$ 1.882,15", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -106,7 +116,7 @@ class TelasTest {
         onNodeWithText("Mercado").performScrollTo().performClick()
         onNodeWithText("Salvar").performScrollTo().assertIsEnabled().performClick()
         onNodeWithText("Farmácia").assertIsDisplayed()
-        onNodeWithText("Saldo do mês: R$ 3.379,95").assertIsDisplayed()
+        onNodeWithText("Saíram R\$ 1.920,05", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -124,7 +134,7 @@ class TelasTest {
         onNode(isHeading()).assertTextEquals("Importar extrato")
         onNodeWithText("Escolher arquivo").assertIsEnabled()
         onNodeWithText("Voltar").performClick()
-        onNodeWithText("Saldo do mês: R$ 3.417,85").assertIsDisplayed()
+        onNodeWithText("Saíram R\$ 1.882,15", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -186,6 +196,7 @@ class TelasTest {
             FluxoTema {
                 FluxoNavegacao(
                     navController = navegacao,
+                    transacoesIniciais = transacoesDeExemplo,
                     hoje = { LocalDate(2026, 9, 27) },
                     api = api,
                     arquivoCompartilhado = ArquivoEscolhido("extrato-bb.csv", "Data;Valor".encodeToByteArray()),
@@ -198,7 +209,7 @@ class TelasTest {
         onNodeWithText("Banco do Brasil · extrato-bb.csv", substring = true).assertIsDisplayed()
         onNodeWithText("Importar 1 lançamento").performClick()
         onNodeWithText("CONTA DE LUZ").assertIsDisplayed()
-        onNodeWithText("Saldo do mês: R$ 3.227,95").assertIsDisplayed()
+        onNodeWithText("Saíram R\$ 2.072,05", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -207,10 +218,10 @@ class TelasTest {
         onNodeWithText("Setembro de 2026").assertIsDisplayed()
         onNodeWithContentDescription("Mês anterior").performClick()
         onNodeWithText("Agosto de 2026").assertIsDisplayed()
-        onNodeWithText("Saldo do mês: R$ 0,00").assertIsDisplayed()
+        onNodeWithText("Nada entrou nem saiu em agosto de 2026.").assertIsDisplayed()
         onNodeWithText("Nenhuma transação em agosto de 2026", substring = true).assertIsDisplayed()
         onNodeWithContentDescription("Próximo mês").performClick()
-        onNodeWithText("Saldo do mês: R$ 3.417,85").assertIsDisplayed()
+        onNodeWithText("Saíram R\$ 1.882,15", substring = true).assertIsDisplayed()
     }
 
     @Test
@@ -224,7 +235,54 @@ class TelasTest {
         onNodeWithText("Salvar").performScrollTo().performClick()
         onNodeWithText("Agosto de 2026").assertIsDisplayed()
         onNodeWithText("Livro").assertIsDisplayed()
-        onNodeWithText("Saldo do mês: -R$ 60,00").assertIsDisplayed()
+        onNodeWithText("Saíram R\$ 60,00").assertIsDisplayed()
+    }
+
+    @Test
+    fun tocarNumaCategoriaFiltraAListaETocarDeNovoVoltaATudo() = runComposeUiTest {
+        abrirApp()
+        onNodeWithText("Moradia 80%").performClick()
+        onNodeWithText("Aluguel").assertIsDisplayed()
+        onNodeWithText("Supermercado").assertDoesNotExist()
+        onNodeWithText("Moradia 80%").performClick()
+        onNodeWithText("Supermercado").assertIsDisplayed()
+    }
+
+    @Test
+    fun barraDizOsGastosPorCategoriaParaOLeitorDeTela() = runComposeUiTest {
+        abrirApp()
+        onNodeWithContentDescription(
+            "Gastos por categoria: Moradia 80%, Mercado 17%, Alimentação 2%, Transporte 1%",
+        ).assertExists()
+    }
+
+    @Test
+    fun janelaLargaMostraOPainelDoMesAoLadoDaLista() = runComposeUiTest {
+        setContent {
+            navegacao = rememberNavController()
+            FluxoTema {
+                FluxoNavegacao(
+                    navController = navegacao,
+                    transacoesIniciais = transacoesDeExemplo,
+                    hoje = { LocalDate(2026, 9, 27) },
+                    largo = true,
+                )
+            }
+        }
+        // A linha do painel junta nome, valor e percentual; o percentual só existe no painel.
+        onNode(hasText("Moradia") and hasText("80%")).assertIsDisplayed()
+        onNodeWithText("Padaria").assertIsDisplayed()
+        onNode(hasText("Mercado") and hasText("17%")).performClick()
+        onNodeWithText("Supermercado").assertIsDisplayed()
+        onNodeWithText("Aluguel").assertDoesNotExist()
+    }
+
+    @Test
+    fun appComecaVazioESemTransacoesDeExemplo() = runComposeUiTest {
+        setContent { FluxoTema { FluxoNavegacao(hoje = { LocalDate(2026, 9, 27) }) } }
+        onNodeWithText("Nada entrou nem saiu em setembro de 2026.").assertIsDisplayed()
+        onNodeWithText("Nenhuma transação em setembro de 2026", substring = true).assertIsDisplayed()
+        onNodeWithText("Aluguel").assertDoesNotExist()
     }
 
     private companion object {

@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import br.ufrn.fluxo.dominio.Mes
@@ -31,7 +32,13 @@ fun SeletorDeMes(mes: Mes, aoTrocar: (Mes) -> Unit, modifier: Modifier = Modifie
         Text(
             formatarMes(mes).replaceFirstChar { it.uppercase() },
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+            maxLines = 1,
+            // O mês é o título da tela: o leitor de tela anuncia como cabeçalho e avisa a cada troca.
+            modifier =
+            Modifier.semantics {
+                heading()
+                liveRegion = LiveRegionMode.Polite
+            },
         )
         IconButton(
             onClick = { aoTrocar(mes.seguinte()) },

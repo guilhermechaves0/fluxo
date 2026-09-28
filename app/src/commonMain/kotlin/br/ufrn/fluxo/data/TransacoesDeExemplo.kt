@@ -7,7 +7,7 @@ import br.ufrn.fluxo.dominio.Tipo.RECEITA
 import br.ufrn.fluxo.dominio.Transacao
 import kotlinx.datetime.LocalDate
 
-// Dados fixos exibidos pela tela até a integração com a api, prevista para a Sprint 3.
+// Dados fixos para os previews e os testes. O app abre vazio: as transações vêm do extrato ou do formulário.
 
 private val moradia = Categoria(id = "moradia", nome = "Moradia")
 private val mercado = Categoria(id = "mercado", nome = "Mercado")
