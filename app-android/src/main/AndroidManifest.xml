@@ -9,9 +9,12 @@
         android:networkSecurityConfig="@xml/seguranca_de_rede"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <!-- Girar a tela, mudar o tamanho da janela ou trocar o tema claro/escuro não recria a Activity:
+             o Compose se ajusta sozinho, e as transações em memória continuam. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density|uiMode"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
