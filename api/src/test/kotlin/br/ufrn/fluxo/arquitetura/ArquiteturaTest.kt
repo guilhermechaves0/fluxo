@@ -19,8 +19,8 @@ private const val VIOLACAO = "$RAIZ.arquitetura.violacao"
  * A regra de dependência entre as camadas, conferida pelo ArchUnit no código compilado.
  *
  *     adaptadores  ->  aplicacao  ->  dominio
- *     (Ktor, Koin)     (casos de uso    (Kotlin puro,
- *                       e portas)        em shared/)
+ *     (Ktor, Koin,     (casos de uso    (Kotlin puro,
+ *      Exposed)         e portas)        em shared/)
  *
  * As dependências só apontam para dentro. O domínio vem de `shared/`, que nem tem Ktor entre as
  * dependências. A camada de aplicação fica neste módulo, ao lado dos frameworks, e só este teste
@@ -46,6 +46,16 @@ class ArquiteturaTest {
         .should()
         .dependOnClassesThat()
         .resideInAPackage(ADAPTADORES)
+        .check(classes)
+
+    @Test
+    fun rotasNaoFalamComOBanco() = noClasses()
+        .that()
+        .resideInAPackage("$RAIZ.adaptadores.web..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAnyPackage("$RAIZ.adaptadores.persistencia..", "org.jetbrains.exposed..", "java.sql..", "javax.sql..")
+        .because("a rota só traduz HTTP em caso de uso, e quem fala com o banco é o adaptador de persistência")
         .check(classes)
 
     // As duas classes de `violacao/` existem só nos testes e quebram as regras de propósito. Se um
@@ -80,5 +90,14 @@ private fun regraDaAplicacao(pacote: String): ArchRule = noClasses()
     .resideInAPackage(pacote)
     .should()
     .dependOnClassesThat()
-    .resideInAnyPackage("io.ktor..", "org.koin..", "kotlinx.serialization..", "java.sql..", "javax.sql..")
-    .because("casos de uso e portas não sabem de HTTP, de JSON, de banco nem de injeção de dependência")
+    .resideInAnyPackage(
+        "io.ktor..",
+        "org.koin..",
+        "kotlinx.serialization..",
+        "org.jetbrains.exposed..",
+        "org.flywaydb..",
+        "com.zaxxer..",
+        "org.postgresql..",
+        "java.sql..",
+        "javax.sql..",
+    ).because("casos de uso e portas não sabem de HTTP, de JSON, de banco nem de injeção de dependência")
