@@ -32,4 +32,5 @@ dependencies {
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.koin.test)
     testImplementation(libs.ktor.client.mock)
+    testImplementation(libs.archunit) // regra de dependência entre as camadas, conferida como teste
 }
