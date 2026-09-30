@@ -61,8 +61,8 @@ mise run ci
 |---|---|
 | `mise run run:app` | Abre o app no desktop |
 | `mise run run:android` | Instala e abre o app no celular conectado por USB |
-| `mise run up` | Sobe a api (porta 8080) e o importador (porta 9090) com Docker Compose |
-| `mise run test` | Roda os testes das duas stacks |
+| `mise run up` | Sobe o banco (porta 5432), a api (porta 8080) e o importador (porta 9090) com Docker Compose |
+| `mise run test` | Roda os testes das duas stacks, com um PostgreSQL num container para os de integração |
 
 O passo a passo completo está em [docs/COMO-RODAR.md](docs/COMO-RODAR.md).
 
