@@ -17,6 +17,7 @@ kotlinx-coroutines = "1.11.0"
 ktor = "3.5.2"
 koin = "4.2.2"
 logback = "1.6.3"
+archunit = "1.5.0"
 ktlint-plugin = "14.2.0"
 ktlint-engine = "1.8.0"
 detekt = "2.0.0-alpha.6"
@@ -50,6 +51,7 @@ koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+archunit = { module = "com.tngtech.archunit:archunit", version.ref = "archunit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
