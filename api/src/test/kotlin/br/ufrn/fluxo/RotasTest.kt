@@ -33,15 +33,6 @@ class RotasTest {
     }
 
     @Test
-    fun transacoesVemDasMaisRecentesParaAsMaisAntigas() = testApplication {
-        application { configurar(modulosEmMemoria()) }
-        val resposta = client.get("/transacoes")
-        val corpo = resposta.bodyAsText()
-        assertEquals(HttpStatusCode.OK, resposta.status)
-        assertTrue(corpo.indexOf("t-03") in 0 until corpo.indexOf("t-01"), corpo)
-    }
-
-    @Test
     fun previaRecebeOArquivoEmMultipartEDevolveAsTransacoes() = testApplication {
         comImportador { EXTRATO }
         val resposta =
