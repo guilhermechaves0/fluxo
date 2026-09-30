@@ -1,43 +1,51 @@
 # Serviços para rodar o projeto localmente.
 #
-#   mise run up                          # gera a distribuição da api e sobe a api (8080) e o importador (9090)
-#   docker compose --profile db up       # também sobe o Postgres 16, que a api passa a usar na Sprint 1
+#   mise run up        # gera a distribuição da api e sobe o banco (5432), a api (8080) e o importador (9090)
+#   mise run banco     # sobe só o PostgreSQL, para rodar a api pelo Gradle com mise run run:api
 #   curl -s localhost:8080/health ; curl -s localhost:9090/health
+#
+# Se uma porta já estiver ocupada na máquina, dá para trocar só a porta do host, sem mexer neste arquivo:
+#   FLUXO_API_PORTA=8081 FLUXO_IMPORTADOR_PORTA=9091 FLUXO_DB_PORTA=5433 mise run up
 
 services:
+  fluxo-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: fluxo
+      POSTGRES_PASSWORD: fluxo       # senha de desenvolvimento local; fora daqui ela vem de segredo
+      POSTGRES_DB: fluxo
+    ports: ["${FLUXO_DB_PORTA:-5432}:5432"]
+    healthcheck:                     # a api só sobe depois que o banco aceita conexão
+      test: ["CMD-SHELL", "pg_isready -U fluxo -d fluxo"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    volumes:
+      - fluxo-db-dados:/var/lib/postgresql/data
+    mem_limit: 256m
+
   fluxo-api:
     build:
       context: .                     # raiz do repositório; o Dockerfile copia api/build/install/api
       dockerfile: api/Dockerfile
-    ports: ["8080:8080"]
+    ports: ["${FLUXO_API_PORTA:-8080}:8080"]
     environment:
       FLUXO_IMPORTADOR_URL: http://fluxo-importador:9090
+      DB_URL: jdbc:postgresql://fluxo-db:5432/fluxo
+      DB_USER: fluxo
+      DB_PASSWORD: fluxo
     mem_limit: 512m                  # mesmo limite da hospedagem gratuita prevista
-    depends_on: [fluxo-importador]
+    depends_on:
+      fluxo-importador: { condition: service_started }
+      fluxo-db: { condition: service_healthy }
 
   fluxo-importador:
     build:
       context: ./services
-    ports: ["9090:9090"]
+    ports: ["${FLUXO_IMPORTADOR_PORTA:-9090}:9090"]
     environment:
       PORT: "9090"
     mem_limit: 256m
-
-  fluxo-db:
-    image: postgres:16-alpine
-    profiles: ["db"]                 # só sobe com --profile db
-    environment:
-      POSTGRES_USER: fluxo
-      POSTGRES_PASSWORD: fluxo       # senha de desenvolvimento local
-      POSTGRES_DB: fluxo
-    ports: ["5432:5432"]
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fluxo -d fluxo"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    volumes:
-      - fluxo-db-dados:/var/lib/postgresql/data
 
 volumes:
   fluxo-db-dados: {}
