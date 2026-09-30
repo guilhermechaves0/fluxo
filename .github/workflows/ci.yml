@@ -1,5 +1,6 @@
 # Integração contínua do Fluxo, com um job por componente:
-#   kotlin  ktlintCheck, detekt, testes e build da api, do app desktop e do APK (DIM0524 e DIM0547)
+#   kotlin  ktlintCheck, detekt, testes (com o de arquitetura da api) e build da api, do app desktop e do APK
+#           (DIM0524 e DIM0547)
 #   go      gofmt, go vet, arch-go, testes e build do importador (DIM0547)
 #   proto   buf lint e buf build do contrato (DIM0547)
 #
@@ -45,7 +46,8 @@ jobs:
       - name: Bibliotecas gráficas para os testes de interface
         run: sudo apt-get update && sudo apt-get install -y libgl1 libegl1 libfontconfig1
 
-      - name: Testes
+      # O :api:test inclui o ArquiteturaTest, que falha se a camada de aplicação importar framework.
+      - name: Testes (domínio, api com o teste de arquitetura, interface)
         run: ./gradlew :shared:jvmTest :api:test :app:jvmTest
 
       - name: Build (api, app desktop e APK de debug)
