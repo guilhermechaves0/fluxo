@@ -40,6 +40,8 @@ fun Application.rotas() {
         post("/importacoes/previa") {
             call.respond(preverImportacao(call.receberArquivo()).paraDto())
         }
+
+        rotasDeContas()
     }
 }
 

@@ -30,6 +30,7 @@ com ajuda da ferramenta.
 | Categoria do banco na importação | Para usar as seções da fatura do Banco do Brasil e a coluna Categoria do CSV do C6 como categoria | Testes com arquivos sintéticos e conferência na minha fatura real, olhando só os nomes das seções |
 | Novo visual e layout em duas larguras | Para montar um plano de design a partir das minhas escolhas de tom, cor, layout e letra, e gerar a primeira versão do tema e das telas | Capturas das telas nos modos claro e escuro e nas duas larguras, testes de interface e uso no celular |
 | Teste de arquitetura da api | Para escrever as regras de dependência com o ArchUnit, a partir do teste do projeto MUSI | Import de Ktor posto de propósito num caso de uso: o teste falhou com a mensagem da regra e voltou a passar sem o import |
+| Banco de dados e CRUD de contas | Para gerar a primeira versão da migração, do repositório com Exposed, dos casos de uso, das rotas e dos testes, a partir do exemplo `ktor-tarefas` da disciplina e do projeto MUSI, e para rascunhar a ADR 0003 | Testes de unidade e de rota, testes de integração com um PostgreSQL no Testcontainers e chamadas com `curl` à api no Docker Compose, antes e depois de reiniciar o container |
 
 ## Decisões minhas
 

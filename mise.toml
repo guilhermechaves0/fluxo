@@ -26,7 +26,7 @@ run = [
 ]
 
 [tasks.test]
-description = "Roda os testes de Kotlin e de Go"
+description = "Roda os testes de Kotlin e de Go (os de integração da api sobem um PostgreSQL e precisam do Docker)"
 run = [
   "./gradlew :shared:jvmTest :api:test :app:jvmTest",
   "cd services && go test -race ./...",
@@ -37,7 +37,7 @@ description = "Roda ktlint e detekt no Kotlin, gofmt, go vet e arch-go no Go e b
 depends = ["lint:kotlin", "lint:go", "lint:proto"]
 
 [tasks.up]
-description = "Gera a distribuição da api e sobe a api (8080) e o importador (9090) no Docker"
+description = "Gera a distribuição da api e sobe o banco (5432), a api (8080) e o importador (9090) no Docker"
 run = ["./gradlew :api:installDist", "docker compose up --build"]
 
 [tasks.ci]
@@ -70,8 +70,13 @@ run = ["./gradlew ktlintFormat", "cd services && gofmt -w .", "buf format -w"]
 # Execução local
 # ---------------------------------------------------------------------------
 
+[tasks.banco]
+description = "Sobe só o PostgreSQL do docker compose e espera ele aceitar conexão"
+run = "docker compose up -d --wait fluxo-db"
+
 [tasks."run:api"]
-description = "Sobe a api na porta 8080"
+description = "Sobe a api na porta 8080, depois de subir o banco"
+depends = ["banco"]
 run = "./gradlew :api:run"
 
 [tasks."run:importador"]

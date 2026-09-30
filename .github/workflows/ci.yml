@@ -46,8 +46,10 @@ jobs:
       - name: Bibliotecas gráficas para os testes de interface
         run: sudo apt-get update && sudo apt-get install -y libgl1 libegl1 libfontconfig1
 
-      # O :api:test inclui o ArquiteturaTest, que falha se a camada de aplicação importar framework.
-      - name: Testes (domínio, api com o teste de arquitetura, interface)
+      # O :api:test inclui o ArquiteturaTest, que falha se a camada de aplicação importar framework, e os
+      # testes de integração, que sobem um PostgreSQL com o Testcontainers. O runner já tem Docker, e nada
+      # muda em relação à máquina local.
+      - name: Testes (domínio, api com arquitetura e integração, interface)
         run: ./gradlew :shared:jvmTest :api:test :app:jvmTest
 
       - name: Build (api, app desktop e APK de debug)
