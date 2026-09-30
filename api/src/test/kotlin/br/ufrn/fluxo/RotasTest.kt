@@ -19,7 +19,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.datetime.LocalDate
-import org.koin.dsl.module
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -27,7 +26,7 @@ import kotlin.test.assertTrue
 class RotasTest {
     @Test
     fun healthRespondeUp() = testApplication {
-        application { modulo(URL_IMPORTADOR) }
+        application { configurar(modulosEmMemoria()) }
         val resposta = client.get("/health")
         assertEquals(HttpStatusCode.OK, resposta.status)
         assertTrue(resposta.bodyAsText().contains("UP"))
@@ -35,7 +34,7 @@ class RotasTest {
 
     @Test
     fun transacoesVemDasMaisRecentesParaAsMaisAntigas() = testApplication {
-        application { modulo(URL_IMPORTADOR) }
+        application { configurar(modulosEmMemoria()) }
         val resposta = client.get("/transacoes")
         val corpo = resposta.bodyAsText()
         assertEquals(HttpStatusCode.OK, resposta.status)
@@ -98,11 +97,10 @@ class RotasTest {
             object : ImportadorDeExtratos {
                 override suspend fun ler(conteudo: ByteArray) = ler()
             }
-        application { modulo(URL_IMPORTADOR, module { single<ImportadorDeExtratos> { falso } }) }
+        application { configurar(modulosEmMemoria(importador = falso)) }
     }
 
     private companion object {
-        const val URL_IMPORTADOR = "http://localhost:9090"
         val EXTRATO =
             ExtratoLido(
                 formato = "OFX",
