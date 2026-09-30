@@ -26,6 +26,7 @@ import org.koin.ktor.ext.inject
  * | PUT    | /contas/{id} | 200                      |
  * | DELETE | /contas/{id} | 204                      |
  *
+ * Remover uma conta remove as transações dela. As rotas das transações ficam em RotasDeTransacoes.kt.
  * Os erros (400, 404, 409 e 422) saem do StatusPages, em Erros.kt, e não daqui.
  */
 fun Route.rotasDeContas() {
@@ -57,6 +58,8 @@ fun Route.rotasDeContas() {
                 cadastro.remover(call.caminho("id"))
                 call.respond(HttpStatusCode.NoContent)
             }
+
+            rotasDeTransacoes()
         }
     }
 }

@@ -1,14 +1,14 @@
 package br.ufrn.fluxo
 
 import br.ufrn.fluxo.adaptadores.importador.ImportadorHttp
-import br.ufrn.fluxo.adaptadores.memoria.TransacoesEmMemoria
 import br.ufrn.fluxo.adaptadores.persistencia.ContasPostgres
+import br.ufrn.fluxo.adaptadores.persistencia.TransacoesPostgres
 import br.ufrn.fluxo.aplicacao.CadastroDeContas
-import br.ufrn.fluxo.aplicacao.FonteDeTransacoes
 import br.ufrn.fluxo.aplicacao.ImportadorDeExtratos
-import br.ufrn.fluxo.aplicacao.ListarTransacoes
 import br.ufrn.fluxo.aplicacao.PreverImportacao
 import br.ufrn.fluxo.aplicacao.RepositorioDeContas
+import br.ufrn.fluxo.aplicacao.RepositorioDeTransacoes
+import br.ufrn.fluxo.aplicacao.TransacoesDaConta
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
@@ -33,15 +33,15 @@ fun importador(urlImportador: String) = module {
     single<ImportadorDeExtratos> { ImportadorHttp(url = urlImportador, cliente = get()) }
 }
 
-/** Repositórios sobre o PostgreSQL. As transações ainda vêm de uma lista fixa em memória. */
+/** Repositórios sobre o PostgreSQL. */
 fun persistencia(banco: Database) = module {
     single<RepositorioDeContas> { ContasPostgres(banco) }
-    single<FonteDeTransacoes> { TransacoesEmMemoria() }
+    single<RepositorioDeTransacoes> { TransacoesPostgres(banco) }
 }
 
 val casosDeUso = module {
     single { CadastroDeContas(contas = get()) }
-    single { ListarTransacoes(fonte = get()) }
+    single { TransacoesDaConta(contas = get(), transacoes = get()) }
     single { PreverImportacao(importador = get()) }
 }
 

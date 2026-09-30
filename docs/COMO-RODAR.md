@@ -80,3 +80,14 @@ curl -s "localhost:8080/contas?pagina=0&tamanho=20&nome=nu"
 
 O `POST` responde `201` com o cabeçalho `Location` da conta criada. Repetir o mesmo nome responde `409`, e um nome
 vazio responde `422`, os dois no formato `application/problem+json`.
+
+As transações ficam dentro da conta. Troque `ID_DA_CONTA` pelo `id` que o `POST` acima devolveu:
+
+```bash
+curl -s -i -X POST localhost:8080/contas/ID_DA_CONTA/transacoes -H 'Content-Type: application/json' \
+  -d '{"descricao":"Supermercado","valorCentavos":31245,"data":"2026-09-06","tipo":"DESPESA","categoria":"Mercado"}'
+curl -s "localhost:8080/contas/ID_DA_CONTA/transacoes?mes=2026-09&tipo=DESPESA&categoria=mercado&tamanho=20"
+```
+
+A listagem vem da data mais recente para a mais antiga e aceita os filtros `tipo`, `mes`, `categoria` e `descricao`.
+Remover a conta remove as transações dela.

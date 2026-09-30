@@ -9,7 +9,8 @@ sealed class ErroDeAplicacao(mensagem: String, causa: Throwable? = null) : Runti
 /** A entrada quebra uma ou mais regras. Traz todas as violações, e não só a primeira. */
 class EntradaInvalida(val violacoes: List<String>) : ErroDeAplicacao(violacoes.joinToString("; "))
 
-class NaoEncontrado(recurso: String, id: String) : ErroDeAplicacao("$recurso $id não existe")
+class NaoEncontrado(recurso: String, id: String, causa: Throwable? = null) :
+    ErroDeAplicacao("$recurso $id não existe", causa)
 
 /** A operação contraria o que já está gravado, como o nome de uma conta que já existe. */
 class Conflito(mensagem: String, causa: Throwable? = null) : ErroDeAplicacao(mensagem, causa)

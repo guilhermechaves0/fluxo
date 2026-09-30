@@ -1,6 +1,5 @@
 package br.ufrn.fluxo.adaptadores.web
 
-import br.ufrn.fluxo.aplicacao.ListarTransacoes
 import br.ufrn.fluxo.aplicacao.PreverImportacao
 import io.ktor.http.ContentType
 import io.ktor.http.content.PartData
@@ -23,16 +22,11 @@ import org.koin.ktor.ext.inject
  * negócio ficam em aplicacao/ e no domínio.
  */
 fun Application.rotas() {
-    val listarTransacoes by inject<ListarTransacoes>()
     val preverImportacao by inject<PreverImportacao>()
 
     routing {
         get("/health") {
             call.respond(mapOf("status" to "UP"))
-        }
-
-        get("/transacoes") {
-            call.respond(listarTransacoes().map { it.paraDto() })
         }
 
         // Prévia: lê o extrato pelo importador em Go e devolve as transações, sem gravar. Aceita o

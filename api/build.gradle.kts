@@ -31,6 +31,7 @@ dependencies {
     // Persistência: SQL escrito em Kotlin (Exposed), driver JDBC, pool de conexões e migrações (Flyway).
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.kotlin.datetime) // colunas de data com os tipos do kotlinx.datetime, os do domínio
     implementation(libs.postgresql)
     implementation(libs.hikari)
     implementation(libs.flyway.core)

@@ -41,6 +41,11 @@ fun Application.tratarErros() {
 }
 
 private fun StatusPagesConfig.errosDaEntrada() {
+    exception<FormatoInvalido> { call, causa ->
+        val status = HttpStatusCode.BadRequest
+        call.responderProblema(status, "requisicao-malformada", "Requisição malformada", causa.message)
+    }
+    // Corpo que o Ktor não conseguiu ler: a mensagem útil está na causa, que diz o campo com problema.
     exception<BadRequestException> { call, causa ->
         val detalhe = causa.cause?.message ?: causa.message
         call.responderProblema(HttpStatusCode.BadRequest, "requisicao-malformada", "Requisição malformada", detalhe)
