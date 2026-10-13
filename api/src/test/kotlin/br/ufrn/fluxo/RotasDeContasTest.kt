@@ -9,6 +9,7 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.post
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -17,6 +18,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.testing.ApplicationTestBuilder
@@ -75,6 +77,28 @@ class RotasDeContasTest {
         val semNome = cliente.enviar(HttpMethod.Post, "/contas", "{}")
         assertEquals(HttpStatusCode.BadRequest, semNome.status)
         assertEquals("https://fluxo.ufrn.br/erros/requisicao-malformada", semNome.problema().type)
+    }
+
+    @Test
+    fun corpoQueNaoEhJsonDevolve415EmVezDe500() = testApplication {
+        val cliente = app()
+        val comoTexto =
+            cliente.post("/contas") {
+                contentType(ContentType.Text.Plain)
+                setBody("Nubank")
+            }
+        assertEquals(HttpStatusCode.UnsupportedMediaType, comoTexto.status, comoTexto.bodyAsText())
+        assertEquals("https://fluxo.ufrn.br/erros/tipo-nao-aceito", comoTexto.problema().type)
+        // Um corpo de bytes sem tipo: com setBody(String), o cliente mandaria text/plain.
+        val semTipo =
+            cliente.post("/contas") {
+                setBody(
+                    object : OutgoingContent.ByteArrayContent() {
+                        override fun bytes() = """{"nome":"Nubank"}""".toByteArray()
+                    },
+                )
+            }
+        assertEquals(HttpStatusCode.UnsupportedMediaType, semTipo.status)
     }
 
     @Test
