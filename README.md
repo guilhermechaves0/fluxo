@@ -64,6 +64,8 @@ mise run ci
 | `mise run up` | Sobe o banco (porta 5432), a api (porta 8080) e o importador (porta 9090) com Docker Compose |
 | `mise run test` | Roda os testes das duas stacks, com um PostgreSQL num container para os de integração |
 
+Com a api no ar, a documentação das rotas fica na Swagger UI, em http://localhost:8080/swagger.
+
 O passo a passo completo está em [docs/COMO-RODAR.md](docs/COMO-RODAR.md).
 
 ## Checklist da Sprint 0
