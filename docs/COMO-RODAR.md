@@ -91,3 +91,17 @@ curl -s "localhost:8080/contas/ID_DA_CONTA/transacoes?mes=2026-09&tipo=DESPESA&c
 
 A listagem vem da data mais recente para a mais antiga e aceita os filtros `tipo`, `mes`, `categoria` e `descricao`.
 Remover a conta remove as transações dela.
+
+## Documentação da API
+
+A api gera o documento OpenAPI das próprias rotas, com o `describe` do Ktor, e serve a Swagger UI. A documentação
+acompanha o código, porque não existe arquivo escrito à mão. Com a api no ar:
+
+| O que | Endereço |
+|---|---|
+| Swagger UI, para ler as rotas e testá-las pelo navegador | http://localhost:8080/swagger |
+| Documento OpenAPI em JSON, para importar no Postman ou no Bruno | http://localhost:8080/openapi.json |
+
+Trocar a porta da api muda a porta dos dois endereços. Com `FLUXO_API_PORTA=8081` no Docker Compose, ou `PORT=8081` ao
+rodar pelo Gradle, a Swagger UI passa a ficar em http://localhost:8081/swagger. A página carrega os arquivos da
+Swagger UI de unpkg.com, então precisa de internet.

@@ -6,10 +6,12 @@ import br.ufrn.fluxo.aplicacao.EntradaInvalida
 import br.ufrn.fluxo.aplicacao.ExtratoInvalido
 import br.ufrn.fluxo.aplicacao.ImportadorIndisponivel
 import br.ufrn.fluxo.aplicacao.NaoEncontrado
+import io.ktor.http.BadContentTypeFormatException
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.ContentTransformationException
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.plugins.statuspages.StatusPagesConfig
 
@@ -20,9 +22,11 @@ import io.ktor.server.plugins.statuspages.StatusPagesConfig
  * | Erro                                        | Status |
  * |---------------------------------------------|--------|
  * | JSON malformado ou parâmetro de tipo errado | 400    |
+ * | Content-Type que não dá para ler            | 400    |
  * | NaoEncontrado                               | 404    |
  * | Conflito                                    | 409    |
  * | ArquivoGrandeDemais                         | 413    |
+ * | Corpo que não é application/json            | 415    |
  * | EntradaInvalida, ExtratoInvalido            | 422    |
  * | ImportadorIndisponivel                      | 503    |
  * | qualquer outro                              | 500    |
@@ -45,10 +49,23 @@ private fun StatusPagesConfig.errosDaEntrada() {
         val status = HttpStatusCode.BadRequest
         call.responderProblema(status, "requisicao-malformada", "Requisição malformada", causa.message)
     }
+    // Content-Type que não segue o formato tipo/subtipo, como "texto". Nas rotas que leem JSON o Ktor já
+    // devolve isto como BadRequestException; na prévia de importação, que lê o tipo à mão, chega assim.
+    exception<BadContentTypeFormatException> { call, causa ->
+        val status = HttpStatusCode.BadRequest
+        call.responderProblema(status, "requisicao-malformada", "Requisição malformada", causa.message)
+    }
     // Corpo que o Ktor não conseguiu ler: a mensagem útil está na causa, que diz o campo com problema.
     exception<BadRequestException> { call, causa ->
         val detalhe = causa.cause?.message ?: causa.message
         call.responderProblema(HttpStatusCode.BadRequest, "requisicao-malformada", "Requisição malformada", detalhe)
+    }
+    // Corpo enviado como texto, formulário ou sem Content-Type numa rota que só lê JSON. O Ktor lança uma
+    // subclasse desta exceção quando nenhum conversor sabe ler o corpo.
+    exception<ContentTransformationException> { call, _ ->
+        val status = HttpStatusCode.UnsupportedMediaType
+        val detalhe = "envie o corpo como application/json"
+        call.responderProblema(status, "tipo-nao-aceito", "Tipo de conteúdo não aceito", detalhe)
     }
     exception<EntradaInvalida> { call, causa ->
         val status = HttpStatusCode.UnprocessableEntity

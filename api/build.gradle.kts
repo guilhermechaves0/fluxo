@@ -20,6 +20,8 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.call.logging)
+    implementation(libs.ktor.server.openapi) // gera o OpenAPI a partir do `describe` de cada rota
+    implementation(libs.ktor.server.swagger) // serve a Swagger UI em /swagger
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.client.core) // chama o importador em Go

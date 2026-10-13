@@ -13,9 +13,11 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import kotlinx.datetime.LocalDate
@@ -81,6 +83,37 @@ class RotasTest {
         comImportador { EXTRATO }
         val resposta = client.post("/importacoes/previa") { setBody(ByteArray(0)) }
         assertEquals(HttpStatusCode.UnprocessableEntity, resposta.status)
+    }
+
+    @Test
+    fun multipartSemBoundaryVira400EmVezDe500() = testApplication {
+        comImportador { EXTRATO }
+        val resposta =
+            client.post("/importacoes/previa") {
+                contentType(ContentType.MultiPart.FormData)
+                setBody("conteudo sem as partes")
+            }
+        assertEquals(HttpStatusCode.BadRequest, resposta.status)
+        assertTrue(resposta.bodyAsText().contains("requisicao-malformada"))
+    }
+
+    @Test
+    fun extratoAcimaDe5MbEnviadoComoOAppEnviaVira413() = testApplication {
+        comImportador { EXTRATO }
+        val seisMegabytes = ByteArray(6 * 1024 * 1024)
+        val resposta =
+            client.submitFormWithBinaryData(
+                "/importacoes/previa",
+                formData {
+                    append(
+                        "arquivo",
+                        seisMegabytes,
+                        Headers.build { append(HttpHeaders.ContentDisposition, "filename=\"grande.ofx\"") },
+                    )
+                },
+            )
+        assertEquals(HttpStatusCode.PayloadTooLarge, resposta.status, resposta.bodyAsText())
+        assertTrue(resposta.bodyAsText().contains("extrato-grande-demais"))
     }
 
     private fun ApplicationTestBuilder.comImportador(ler: () -> ExtratoLido) {
