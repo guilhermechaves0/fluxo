@@ -70,9 +70,9 @@ private fun StatusPagesConfig.errosDaEntrada() {
     }
     // Escape de porcentagem inválido na consulta, como `?x=%ZZ`. O Ktor lança isto ao ler os parâmetros, em qualquer
     // rota. No caminho (`/contas/%ZZ`) o Ktor já responde 400.
-    exception<URLDecodeException> { call, causa ->
-        val status = HttpStatusCode.BadRequest
-        call.responderProblema(status, "requisicao-malformada", "Requisição malformada", causa.message)
+    exception<URLDecodeException> { call, _ ->
+        val detalhe = "o endereço tem um escape de porcentagem inválido, como %ZZ"
+        call.responderProblema(HttpStatusCode.BadRequest, "requisicao-malformada", "Requisição malformada", detalhe)
     }
     // Corpo que o Ktor não conseguiu ler: a mensagem útil está na causa, que diz o campo com problema.
     exception<BadRequestException> { call, causa ->

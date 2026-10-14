@@ -170,13 +170,13 @@ class ErrosDaApiTest {
 
     @Test
     fun escapeDePorcentagemInvalidoDevolve400EmVezDe500() = testApplication {
-        val mensagem = "Wrong HEX escape: %ZZ, in %ZZ, at 0"
         application {
             configurar(modulosEmMemoria())
             // O cliente de teste não monta um endereço com %ZZ. A rota lança o que o Ktor lança ao ler a consulta.
-            routing { route("/consulta-invalida") { handle { throw URLDecodeException(mensagem) } } }
+            routing { route("/consulta-invalida") { handle { throw URLDecodeException("Wrong HEX escape: %ZZ") } } }
         }
-        client.get("/consulta-invalida").confere(HttpStatusCode.BadRequest, "requisicao-malformada", mensagem)
+        client.get("/consulta-invalida")
+            .confereMalformada("o endereço tem um escape de porcentagem inválido, como %ZZ")
     }
 
     // ---------------------------------------------------------------- caractere nulo, que o PostgreSQL recusa
