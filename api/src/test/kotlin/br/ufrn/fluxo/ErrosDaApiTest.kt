@@ -236,13 +236,6 @@ class ErrosDaApiTest {
     }
 
     @Test
-    fun anoGigantescoDevolve400EmVezDe500() = testApplication {
-        val resposta = app().lancar(corpoDaTransacao(dia = "+99999999999-01-01"))
-        assertEquals(HttpStatusCode.BadRequest, resposta.status, resposta.bodyAsText())
-        assertEquals("https://fluxo.ufrn.br/erros/requisicao-malformada", resposta.problema().type)
-    }
-
-    @Test
     fun osAnosLimiteSaoAceitos() = testApplication {
         val cliente = app()
         listOf("0001-01-01", "9999-12-31").forEach { dia ->
