@@ -7,6 +7,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.onAllNodesWithText
@@ -14,10 +16,12 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.navigation.NavHostController
+import androidx.navigation.NavUri
 import androidx.navigation.compose.rememberNavController
 import br.ufrn.fluxo.data.ApiDoFluxo
 import br.ufrn.fluxo.data.transacoesDeExemplo
@@ -96,6 +100,33 @@ class TelasTest {
         onNode(isHeading()).assertTextEquals("Supermercado")
         runOnIdle { navegacao.navigate(DetalheDaTransacao(id = "nao-existe")) }
         onNode(isHeading()).assertTextEquals("Transação não encontrada")
+    }
+
+    @Test
+    fun deepLinkAbreODetalhePeloEnderecoEOVoltarLevaParaALista() = runComposeUiTest {
+        abrirApp()
+        runOnIdle { navegacao.navigate(NavUri("fluxo://transacao/t-03")) }
+        onNode(isHeading()).assertTextEquals("Supermercado")
+        onNodeWithText("Voltar").performClick()
+        onNodeWithText("Saíram R\$", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun linhaETotalDoDiaDizemSeOValorEhGastoOuEntradaParaOLeitorDeTela() = runComposeUiTest {
+        abrirApp()
+        // O valor da linha vira "gasto de" ou "entrada de" no nó da própria linha, o que o TalkBack lê.
+        onNodeWithContentDescription("gasto de R\$ 45,90", substring = true)
+            .assert(hasText("Padaria") and hasClickAction())
+        // O Salário e o dia 5 ficam no fim da lista, que pode passar da janela de teste.
+        onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Salário"))
+        onNodeWithContentDescription("entrada de R\$ 4.500,00", substring = true).assert(hasText("Salário"))
+        // O dia 5 tem o Salário e o Aluguel: o saldo de R$ 3.000,00 é de entrada.
+        onNodeWithContentDescription("entraram R\$ 3.000,00", substring = true)
+            .assert(isHeading() and hasText("5 de setembro"))
+        onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Padaria"))
+        onNodeWithText("Padaria").performClick()
+        onNode(isHeading()).assertTextEquals("Padaria")
+        onNodeWithContentDescription("gasto de R\$ 45,90", substring = true).assertExists()
     }
 
     @Test
