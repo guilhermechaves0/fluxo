@@ -16,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -29,11 +31,13 @@ import br.ufrn.fluxo.presentation.theme.daCategoria
  * Uma transação na lista: ponto na cor da categoria, descrição, categoria e valor.
  *
  * Gasto aparece na cor do texto, sem sinal; entrada aparece em âmbar com "+". Com [aoClicar], a linha
- * inteira vira um botão, e o leitor de tela lê o conteúdo junto e anuncia "abrir detalhes".
+ * inteira vira um botão, e o leitor de tela lê o conteúdo junto e anuncia "abrir detalhes". O valor é
+ * lido como "gasto de" ou "entrada de", porque o leitor não passa a cor nem o "+".
  */
 @Composable
 fun LinhaDeTransacao(transacao: Transacao, modifier: Modifier = Modifier, aoClicar: (() -> Unit)? = null) {
     val entrada = transacao.tipo == Tipo.RECEITA
+    val leitura = transacao.leituraDoValor
     val clicavel =
         if (aoClicar == null) {
             Modifier
@@ -72,6 +76,7 @@ fun LinhaDeTransacao(transacao: Transacao, modifier: Modifier = Modifier, aoClic
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = if (entrada) FontWeight.Medium else FontWeight.Normal,
             color = if (entrada) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.clearAndSetSemantics { contentDescription = leitura },
         )
     }
 }
