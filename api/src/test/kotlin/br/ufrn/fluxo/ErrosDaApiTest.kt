@@ -185,6 +185,8 @@ class ErrosDaApiTest {
     fun caractereNuloNoCaminhoDevolve400() = testApplication {
         val cliente = app()
         cliente.get("/contas/%00").confereMalformada(NULO_NO_ID)
+        // O `?id=` da consulta não substitui o id do caminho.
+        cliente.get("/contas/%00?id=c-1").confereMalformada(NULO_NO_ID)
         cliente.delete("/contas/%00").confereMalformada(NULO_NO_ID)
         cliente.get("/contas/%00/transacoes").confereMalformada(NULO_NO_ID)
         cliente.get("$TRANSACOES/%00").confereMalformada("transacaoId não pode conter o caractere nulo")

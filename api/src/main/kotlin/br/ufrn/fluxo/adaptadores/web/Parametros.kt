@@ -5,6 +5,7 @@ import br.ufrn.fluxo.dominio.Mes
 import br.ufrn.fluxo.dominio.Tipo
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.routing.RoutingCall
 import io.ktor.server.util.getOrFail
 import kotlinx.datetime.LocalDate
 
@@ -33,8 +34,11 @@ fun ApplicationCall.inteiro(nome: String): Int? = request.queryParameters[nome]?
 fun ApplicationCall.texto(nome: String): String? =
     request.queryParameters[nome]?.takeIf { it.isNotBlank() }?.let { lerTexto(nome, it) }
 
-/** Parâmetro do caminho, como o `{id}` de `/contas/{id}`. */
-fun ApplicationCall.caminho(nome: String): String = lerTexto(nome, parameters.getOrFail(nome))
+/**
+ * Parâmetro do caminho, como o `{id}` de `/contas/{id}`. Lê só o caminho: `call.parameters` junta a consulta
+ * na frente, e um `?id=` na consulta trocaria o recurso.
+ */
+fun RoutingCall.caminho(nome: String): String = lerTexto(nome, pathParameters.getOrFail(nome))
 
 /** `?pagina=0&tamanho=20`, com os padrões de [PedidoDePagina] para o que não veio. */
 fun ApplicationCall.pedidoDePagina() =

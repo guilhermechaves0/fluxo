@@ -134,6 +134,14 @@ class RotasDeContasTest {
     }
 
     @Test
+    fun oIdDaConsultaNaoSubstituiODoCaminho() = testApplication {
+        val cliente = app(NUBANK, Conta("c-2", "Inter"))
+        assertEquals(HttpStatusCode.NoContent, cliente.delete("/contas/c-1?id=c-2").status)
+        assertEquals(HttpStatusCode.NotFound, cliente.get("/contas/c-1").status)
+        assertEquals(HttpStatusCode.OK, cliente.get("/contas/c-2?id=c-1").status)
+    }
+
+    @Test
     fun listagemPaginaEFiltraPeloNome() = testApplication {
         val cliente = app(NUBANK, CARTEIRA, Conta("c-3", "Banco do Brasil"))
         val primeira = cliente.get("/contas?tamanho=2").body<PaginaDeContasDto>()
