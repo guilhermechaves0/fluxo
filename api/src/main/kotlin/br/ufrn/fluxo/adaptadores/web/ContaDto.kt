@@ -18,6 +18,9 @@ data class PaginaDeContasDto(val itens: List<ContaDto>, val pagina: Int, val tam
 
 fun Conta.paraDto() = ContaDto(id = id, nome = nome)
 
+/** O nome do corpo. Com o caractere nulo, que o banco recusa, é requisição malformada (400). */
+fun NovaContaDto.paraNome() = lerTexto("nome", nome)
+
 fun Pagina<Conta>.paraDto() = PaginaDeContasDto(
     itens = itens.map { it.paraDto() },
     pagina = pedido.pagina,

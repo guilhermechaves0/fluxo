@@ -43,7 +43,7 @@ fun Route.rotasDeContas() {
         }.describe(Doc.listarContas)
 
         post {
-            val criada = cadastro.criar(call.receive<NovaContaDto>().nome)
+            val criada = cadastro.criar(call.receive<NovaContaDto>().paraNome())
             call.response.header(HttpHeaders.Location, "/contas/${criada.id}")
             call.respond(HttpStatusCode.Created, criada.paraDto())
         }.describe(Doc.criarConta)
@@ -54,7 +54,7 @@ fun Route.rotasDeContas() {
             }.describe(Doc.buscarConta)
 
             put {
-                val nome = call.receive<NovaContaDto>().nome
+                val nome = call.receive<NovaContaDto>().paraNome()
                 call.respond(cadastro.renomear(call.caminho("id"), nome).paraDto())
             }.describe(Doc.renomearConta)
 
