@@ -270,14 +270,14 @@ class DocumentacaoTest {
                 "POST /importacoes/previa" to listOf(400, 413, 422, 503),
                 "GET /contas" to listOf(400, 422),
                 "POST /contas" to listOf(400, 409, 415, 422),
-                "GET /contas/{id}" to listOf(404),
+                "GET /contas/{id}" to listOf(400, 404),
                 "PUT /contas/{id}" to listOf(400, 404, 409, 415, 422),
-                "DELETE /contas/{id}" to listOf(404),
+                "DELETE /contas/{id}" to listOf(400, 404),
                 "GET /contas/{id}/transacoes" to listOf(400, 404, 422),
                 "POST /contas/{id}/transacoes" to listOf(400, 404, 415, 422),
-                "GET /contas/{id}/transacoes/{transacaoId}" to listOf(404),
+                "GET /contas/{id}/transacoes/{transacaoId}" to listOf(400, 404),
                 "PUT /contas/{id}/transacoes/{transacaoId}" to listOf(400, 404, 415, 422),
-                "DELETE /contas/{id}/transacoes/{transacaoId}" to listOf(404),
+                "DELETE /contas/{id}/transacoes/{transacaoId}" to listOf(400, 404),
             )
 
         val SCHEMAS_DE_ENTRADA =
