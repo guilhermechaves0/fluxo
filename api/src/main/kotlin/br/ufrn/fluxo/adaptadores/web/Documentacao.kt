@@ -24,7 +24,8 @@ internal val INFO_DA_API = OpenApiInfo(
     title = "API do Fluxo",
     version = "0.2.0",
     description = "Contas e transações do assistente de finanças pessoais Fluxo, com a prévia da importação de " +
-        "extratos OFX e CSV. Os erros voltam no formato application/problem+json, da RFC 9457.",
+        "extratos OFX e CSV. Toda resposta de erro volta no formato application/problem+json, da RFC 9457, " +
+        "inclusive rota inexistente (404), método não permitido (405) e `Accept` sem JSON (406).",
 )
 
 private typealias Descricao = Operation.Builder.() -> Unit

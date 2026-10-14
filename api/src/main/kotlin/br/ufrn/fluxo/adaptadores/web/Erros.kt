@@ -8,12 +8,15 @@ import br.ufrn.fluxo.aplicacao.ImportadorIndisponivel
 import br.ufrn.fluxo.aplicacao.NaoEncontrado
 import io.ktor.http.BadContentTypeFormatException
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.URLDecodeException
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.ContentTransformationException
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.plugins.statuspages.StatusPagesConfig
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.path
 
 /**
  * Exceção vira resposta num lugar só. Os casos de uso lançam erros com nome, e é aqui que cada nome
@@ -23,18 +26,28 @@ import io.ktor.server.plugins.statuspages.StatusPagesConfig
  * |---------------------------------------------|--------|
  * | JSON malformado ou parâmetro de tipo errado | 400    |
  * | Content-Type que não dá para ler            | 400    |
+ * | Escape de porcentagem inválido na consulta  | 400    |
+ * | Texto com o caractere nulo                  | 400    |
+ * | Data com ano fora de 1 a 9999               | 400    |
+ * | Rota que não existe                         | 404    |
  * | NaoEncontrado                               | 404    |
+ * | Método que a rota não aceita                | 405    |
+ * | Accept sem application/json                 | 406    |
  * | Conflito                                    | 409    |
  * | ArquivoGrandeDemais                         | 413    |
  * | Corpo que não é application/json            | 415    |
  * | EntradaInvalida, ExtratoInvalido            | 422    |
  * | ImportadorIndisponivel                      | 503    |
  * | qualquer outro                              | 500    |
+ *
+ * A rota que não existe, o método que ela não aceita e o `Accept` sem JSON não lançam exceção: o Ktor responde
+ * 404, 405 e 406 sem corpo, e o `status` do StatusPages troca essas respostas pelo problem details.
  */
 fun Application.tratarErros() {
     install(StatusPages) {
         errosDaEntrada()
         errosDaImportacao()
+        respostasSemCorpo()
         exception<Throwable> { call, causa ->
             // O detalhe fica só no log: a resposta não mostra o que aconteceu por dentro.
             call.application.environment.log
@@ -52,6 +65,12 @@ private fun StatusPagesConfig.errosDaEntrada() {
     // Content-Type que não segue o formato tipo/subtipo, como "texto". Nas rotas que leem JSON o Ktor já
     // devolve isto como BadRequestException; na prévia de importação, que lê o tipo à mão, chega assim.
     exception<BadContentTypeFormatException> { call, causa ->
+        val status = HttpStatusCode.BadRequest
+        call.responderProblema(status, "requisicao-malformada", "Requisição malformada", causa.message)
+    }
+    // Escape de porcentagem inválido na consulta, como `?x=%ZZ`. O Ktor lança isto ao ler os parâmetros, em qualquer
+    // rota. No caminho (`/contas/%ZZ`) o Ktor já responde 400.
+    exception<URLDecodeException> { call, causa ->
         val status = HttpStatusCode.BadRequest
         call.responderProblema(status, "requisicao-malformada", "Requisição malformada", causa.message)
     }
@@ -81,6 +100,23 @@ private fun StatusPagesConfig.errosDaEntrada() {
     }
     exception<Conflito> { call, causa ->
         call.responderProblema(HttpStatusCode.Conflict, "conflito", "Conflito com o que já está gravado", causa.message)
+    }
+}
+
+// O StatusPages roda um handler por chamada: o 404 do NaoEncontrado, que já saiu por um `exception`, não passa de
+// novo pelo `status`.
+private fun StatusPagesConfig.respostasSemCorpo() {
+    status(HttpStatusCode.NotFound) { call, status ->
+        val detalhe = "não existe rota para ${call.request.httpMethod.value} ${call.request.path()}"
+        call.responderProblema(status, "rota-inexistente", "Rota inexistente", detalhe)
+    }
+    status(HttpStatusCode.MethodNotAllowed) { call, status ->
+        val detalhe = "${call.request.httpMethod.value} não é permitido em ${call.request.path()}"
+        call.responderProblema(status, "metodo-nao-permitido", "Método não permitido", detalhe)
+    }
+    status(HttpStatusCode.NotAcceptable) { call, status ->
+        val detalhe = "a api responde em application/json"
+        call.responderProblema(status, "formato-nao-aceito", "Formato de resposta não aceito", detalhe)
     }
 }
 
