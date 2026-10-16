@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,10 +33,17 @@ fun SeletorDeCategoria(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             categorias.forEach { categoria ->
+                val escolhida = categoria == selecionada
                 FilterChip(
-                    selected = categoria == selecionada,
+                    selected = escolhida,
                     onClick = { aoSelecionar(categoria) },
                     label = { Text(categoria.nome) },
+                    border =
+                    FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = escolhida,
+                        borderColor = MaterialTheme.colorScheme.outline,
+                    ),
                 )
             }
         }

@@ -23,6 +23,8 @@ private val GrafiteClaro = Color(0xFF97A3B3)
 private val FioNoturno = Color(0xFF2A3442)
 private val AmbarClaro = Color(0xFFF0B252)
 
+// O `outline` contorna campos e chips e fica acima de 3:1 sobre o fundo e o papel (WCAG 1.4.11): 3,3:1 e 3,6:1
+// no claro, 4,3:1 e 3,9:1 no escuro. O `outlineVariant` é só o fio decorativo da lista e continua apagado.
 internal val esquemaClaro =
     lightColorScheme(
         primary = AmbarEscuro,
@@ -44,7 +46,7 @@ internal val esquemaClaro =
         surfaceContainer = Nevoa,
         surfaceContainerHigh = Color(0xFFEBEEF2),
         surfaceContainerHighest = Color(0xFFE3E7EC),
-        outline = Color(0xFFB3BCC7),
+        outline = Color(0xFF7B8899),
         outlineVariant = Fio,
     )
 
@@ -69,7 +71,7 @@ internal val esquemaEscuro =
         surfaceContainer = PapelNoturno,
         surfaceContainerHigh = Color(0xFF232E3C),
         surfaceContainerHighest = Color(0xFF2A3544),
-        outline = Color(0xFF4A5666),
+        outline = Color(0xFF71809A),
         outlineVariant = FioNoturno,
     )
 
