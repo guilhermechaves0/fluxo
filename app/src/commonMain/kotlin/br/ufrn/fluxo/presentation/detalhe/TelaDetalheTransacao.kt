@@ -12,6 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -19,6 +21,7 @@ import br.ufrn.fluxo.dominio.Tipo
 import br.ufrn.fluxo.dominio.Transacao
 import br.ufrn.fluxo.dominio.formatarData
 import br.ufrn.fluxo.dominio.formatarReais
+import br.ufrn.fluxo.presentation.transacoes.leituraDoValor
 import br.ufrn.fluxo.presentation.transacoes.rotulo
 
 /**
@@ -59,10 +62,12 @@ fun TelaDetalheTransacao(transacao: Transacao?, aoVoltar: () -> Unit, modifier: 
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.semantics { heading() },
         )
+        val leitura = transacao.leituraDoValor
         Text(
             formatarReais(transacao.valorComSinal),
             style = MaterialTheme.typography.displaySmall,
             color = corDoValor,
+            modifier = Modifier.clearAndSetSemantics { contentDescription = leitura },
         )
         HorizontalDivider()
         LinhaDeDetalhe("Tipo", transacao.tipo.rotulo)

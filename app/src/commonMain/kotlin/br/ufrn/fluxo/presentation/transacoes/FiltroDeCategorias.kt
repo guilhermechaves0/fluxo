@@ -16,6 +16,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,11 +57,18 @@ fun FiltroDeCategorias(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         fatias.forEach { fatia ->
+            val escolhida = fatia.id == selecionada
             FilterChip(
-                selected = fatia.id == selecionada,
-                onClick = { aoSelecionar(if (fatia.id == selecionada) null else fatia.id) },
+                selected = escolhida,
+                onClick = { aoSelecionar(if (escolhida) null else fatia.id) },
                 label = { Text("${fatia.nome} ${fatia.percentual}") },
                 leadingIcon = { PontoDaCategoria(fatia.id) },
+                border =
+                FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = escolhida,
+                    borderColor = MaterialTheme.colorScheme.outline,
+                ),
             )
         }
     }
