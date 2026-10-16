@@ -24,7 +24,10 @@ internal val INFO_DA_API = OpenApiInfo(
     title = "API do Fluxo",
     version = "0.2.0",
     description = "Contas e transações do assistente de finanças pessoais Fluxo, com a prévia da importação de " +
-        "extratos OFX e CSV. Os erros voltam no formato application/problem+json, da RFC 9457.",
+        "extratos OFX e CSV. Toda resposta de erro volta no formato application/problem+json, da RFC 9457, " +
+        "inclusive escape de porcentagem inválido no endereço (400), rota inexistente (404), método que a rota " +
+        "não aceita (405 nas rotas sem parâmetro no caminho; nas rotas com `{id}` o roteador responde 404) e " +
+        "`Accept` sem JSON (406).",
 )
 
 private typealias Descricao = Operation.Builder.() -> Unit
@@ -106,7 +109,10 @@ object Doc {
                 description = "Uma página de contas"
                 schema = jsonSchema<PaginaDeContasDto>()
             }
-            problema(HttpStatusCode.BadRequest, "`pagina` ou `tamanho` que não é um número inteiro")
+            problema(
+                HttpStatusCode.BadRequest,
+                "`pagina` ou `tamanho` que não é um número inteiro, ou `nome` com o caractere nulo",
+            )
             problema(HttpStatusCode.UnprocessableEntity, FORA_DA_FAIXA)
         }
     }
@@ -148,6 +154,7 @@ object Doc {
                 description = "A conta"
                 schema = jsonSchema<ContaDto>()
             }
+            problema(HttpStatusCode.BadRequest, ID_COM_NULO)
             problema(HttpStatusCode.NotFound, CONTA_INEXISTENTE)
         }
     }
@@ -179,6 +186,7 @@ object Doc {
         parameters { idDaConta() }
         responses {
             HttpStatusCode.NoContent { description = "Conta removida" }
+            problema(HttpStatusCode.BadRequest, ID_COM_NULO)
             problema(HttpStatusCode.NotFound, CONTA_INEXISTENTE)
         }
     }
@@ -216,8 +224,8 @@ object Doc {
             }
             problema(
                 HttpStatusCode.BadRequest,
-                "`pagina` ou `tamanho` que não é um número inteiro, `tipo` diferente de RECEITA e DESPESA " +
-                    "ou `mes` fora do formato aaaa-mm",
+                "`pagina` ou `tamanho` que não é um número inteiro, `tipo` diferente de RECEITA e " +
+                    "DESPESA, `mes` fora do formato aaaa-mm, ou `id` ou um filtro com o caractere nulo",
             )
             problema(HttpStatusCode.NotFound, CONTA_INEXISTENTE)
             problema(HttpStatusCode.UnprocessableEntity, FORA_DA_FAIXA)
@@ -264,6 +272,7 @@ object Doc {
                 description = "A transação"
                 schema = jsonSchema<TransacaoDto>()
             }
+            problema(HttpStatusCode.BadRequest, ID_COM_NULO)
             problema(HttpStatusCode.NotFound, CONTA_OU_TRANSACAO_INEXISTENTE)
         }
     }
@@ -302,6 +311,7 @@ object Doc {
         }
         responses {
             HttpStatusCode.NoContent { description = "Transação removida" }
+            problema(HttpStatusCode.BadRequest, ID_COM_NULO)
             problema(HttpStatusCode.NotFound, CONTA_OU_TRANSACAO_INEXISTENTE)
         }
     }
@@ -311,6 +321,7 @@ object Doc {
 
 private const val CONTA_INEXISTENTE = "Conta inexistente"
 private const val CONTA_OU_TRANSACAO_INEXISTENTE = "Conta ou transação inexistente"
+private const val ID_COM_NULO = "Id do caminho com o caractere nulo"
 private const val CORPO_NAO_JSON = "Corpo enviado em outro formato que não application/json"
 private const val FORA_DA_FAIXA =
     "`pagina` negativa ou `tamanho` fora de 1 a ${PedidoDePagina.TAMANHO_MAXIMO}; os motivos vêm em `violacoes`"
@@ -384,7 +395,10 @@ private fun Responses.Builder.problema(status: HttpStatusCode, descricao: String
  * entra entre o 400 e o 409.
  */
 private fun Responses.Builder.escritaDeConta(naoEncontrado: String? = null) {
-    problema(HttpStatusCode.BadRequest, "JSON malformado, `nome` ausente ou de tipo errado")
+    problema(
+        HttpStatusCode.BadRequest,
+        "JSON malformado, `nome` ausente ou de tipo errado, ou `nome` ou `id` com o caractere nulo",
+    )
     naoEncontrado?.let { problema(HttpStatusCode.NotFound, it) }
     problema(HttpStatusCode.Conflict, "Já existe outra conta com esse nome, sem diferenciar maiúsculas de minúsculas")
     problema(HttpStatusCode.UnsupportedMediaType, CORPO_NAO_JSON)
@@ -398,8 +412,9 @@ private fun Responses.Builder.escritaDeConta(naoEncontrado: String? = null) {
 private fun Responses.Builder.escritaDeTransacao(naoEncontrado: String) {
     problema(
         HttpStatusCode.BadRequest,
-        "JSON malformado, campo obrigatório ausente ou de tipo errado, `data` fora do formato aaaa-mm-dd ou `tipo` " +
-            "diferente de RECEITA e DESPESA",
+        "JSON malformado, campo obrigatório ausente ou de tipo errado, `data` fora do formato " +
+            "aaaa-mm-dd ou com o ano fora de 1 a 9999, `tipo` diferente de RECEITA e DESPESA, ou texto ou id " +
+            "com o caractere nulo",
     )
     problema(HttpStatusCode.NotFound, naoEncontrado)
     problema(HttpStatusCode.UnsupportedMediaType, CORPO_NAO_JSON)

@@ -46,13 +46,16 @@ fun Transacao.paraDto() = TransacaoDto(
     categoria = categoria?.nome,
 )
 
-/** Converte o corpo para os tipos do domínio. Data ou tipo fora do formato é requisição malformada (400). */
+/**
+ * Converte o corpo para os tipos do domínio. Data fora do formato ou do ano 1 a 9999, tipo desconhecido e texto com
+ * o caractere nulo são requisição malformada (400).
+ */
 fun NovaTransacaoDto.paraDados() = DadosDaTransacao(
-    descricao = descricao,
+    descricao = lerTexto("descricao", descricao),
     valorCentavos = valorCentavos,
     data = lerDia("data", data),
     tipo = lerTipo("tipo", tipo),
-    categoria = categoria?.takeIf { it.isNotBlank() }?.let(::categoriaPeloNome),
+    categoria = categoria?.takeIf { it.isNotBlank() }?.let { categoriaPeloNome(lerTexto("categoria", it)) },
 )
 
 @JvmName("paginaDeTransacoesParaDto")

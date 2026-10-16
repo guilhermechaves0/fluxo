@@ -1,9 +1,12 @@
 package br.ufrn.fluxo.adaptadores.web
 
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
+import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -28,7 +31,8 @@ private val JSON = Json { explicitNulls = false }
 
 /**
  * Responde o problema com o tipo de mídia da RFC, `application/problem+json`, e não com
- * `application/json`. O [Problema.instance] é o caminho da requisição.
+ * `application/json`. O [Problema.instance] é o caminho da requisição. Num HEAD só o status vai: a resposta a
+ * um HEAD não tem corpo, e o Ktor não o tira sozinho.
  */
 suspend fun ApplicationCall.responderProblema(
     status: HttpStatusCode,
@@ -37,6 +41,7 @@ suspend fun ApplicationCall.responderProblema(
     detalhe: String? = null,
     violacoes: List<String>? = null,
 ) {
+    if (request.httpMethod == HttpMethod.Head) return respond(status)
     val problema =
         Problema(
             type = "https://fluxo.ufrn.br/erros/$tipo",
