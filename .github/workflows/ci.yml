@@ -4,7 +4,8 @@
 #   go      gofmt, go vet, arch-go, testes e build do importador (DIM0547)
 #   proto   buf lint, buf build e conferência dos stubs de Go gerados do contrato (DIM0547)
 #   imagens constrói as imagens da api e do importador; na main, publica no ghcr.io (DIM0547)
-#   migrar  na main, roda `migrar` da imagem publicada contra o banco gerenciado (DIM0547)
+#   migrar  na main, roda `migrar` da imagem publicada contra o banco gerenciado e, se houver o gancho, pede
+#           a implantação ao Render (DIM0547)
 #
 # `mise run ci` roda as mesmas verificações localmente.
 
@@ -193,11 +194,28 @@ jobs:
         if: steps.segredos.outputs.presentes == 'true'
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
+      # O Flyway imprime a URL JDBC, com o endereço do banco; o sed a esconde do log público. O pipefail
+      # mantém o código de saída do docker run.
       - name: Rodar migrar
         if: steps.segredos.outputs.presentes == 'true'
         run: |
+          set -o pipefail
           imagem="ghcr.io/${GITHUB_REPOSITORY,,}/api:${{ github.sha }}"
-          docker run --rm -e DB_URL -e DB_USER -e DB_PASSWORD "$imagem" migrar
+          docker run --rm -e DB_URL -e DB_USER -e DB_PASSWORD "$imagem" migrar 2>&1 \
+            | sed -E 's#jdbc:postgresql://[^[:space:]]*#jdbc:postgresql://***#g'
+
+      # O Render não reimplanta sozinho quando a etiqueta latest muda. Com o gancho de implantação
+      # configurado, pede a nova versão; sem ele, só avisa. A URL do gancho é segredo e não vai para o log.
+      - name: Pedir a implantação ao Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "::warning::Segredo RENDER_DEPLOY_HOOK ausente: implantação manual no painel do Render."
+            exit 0
+          fi
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK" > /dev/null
+          echo "Implantação pedida ao Render."
 
   # Job exigido pela proteção da main; falha se algum job anterior falhar.
   ci:

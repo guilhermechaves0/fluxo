@@ -9,7 +9,9 @@
 # e responde 503 só na importação de extrato; o resto (contas e transações) funciona.
 #
 # O preDeployCommand também só existe em plano pago. No gratuito, a api aplica as migrações do Flyway ao
-# subir, e o CI roda `migrar` da imagem recém-publicada contra o banco antes do Render puxar a versão nova.
+# subir. O CI publica a imagem, roda `migrar` contra o banco e, se o segredo RENDER_DEPLOY_HOOK estiver
+# configurado no repositório, pede ao Render a nova versão (o serviço não reimplanta sozinho quando a
+# etiqueta latest muda). Sem o gancho, a implantação é manual no painel do Render.
 services:
   # A api: pública, com health check. A imagem é publicada pelo CI na branch main.
   - type: web
