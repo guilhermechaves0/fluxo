@@ -26,7 +26,8 @@ O `local.properties` guarda o caminho do SDK na máquina e fica fora do reposit�
 | `mise run test` | Roda os testes das duas stacks. Os de integração da api sobem um PostgreSQL num container |
 | `mise run lint` | Roda ktlint, detekt, gofmt, go vet, arch-go e buf lint |
 | `mise run ci` | Roda lint, build e testes na mesma ordem do GitHub Actions |
-| `mise run up` | Sobe o banco (porta 5432), a api (porta 8080) e o importador (porta 9090) com Docker Compose |
+| `mise run up` | Sobe o banco (porta 5432), a api (porta 8080) e o importador, que fala gRPC (porta 9090), com Docker Compose |
+| `mise run gerar` | Gera de novo os stubs de Go do contrato, com `buf generate` |
 | `mise run banco` | Sobe só o PostgreSQL do Docker Compose |
 | `mise run run:api` | Sobe o banco e roda a api pelo Gradle, sem container |
 | `mise run run:importador` | Roda o importador sem container |
@@ -48,7 +49,7 @@ A api lê o endereço do banco de variáveis de ambiente. Os valores padrão sã
 | `DB_USER` | `fluxo` |
 | `DB_PASSWORD` | `fluxo` |
 | `PORT` | `8080` |
-| `FLUXO_IMPORTADOR_URL` | `http://localhost:9090` |
+| `FLUXO_IMPORTADOR_ENDERECO` | `localhost:9090` |
 
 Se uma porta já estiver ocupada na máquina, dá para trocar só a porta do host no Docker Compose:
 
@@ -73,7 +74,7 @@ Com o banco, a api e o importador no ar:
 
 ```bash
 curl -s localhost:8080/health
-curl -s localhost:9090/health
+grpcurl -plaintext localhost:9090 grpc.health.v1.Health/Check   # o importador fala gRPC; precisa do grpcurl
 curl -s -i -X POST localhost:8080/contas -H 'Content-Type: application/json' -d '{"nome":"Nubank"}'
 curl -s "localhost:8080/contas?pagina=0&tamanho=20&nome=nu"
 ```

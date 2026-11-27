@@ -1,8 +1,9 @@
 # Serviços para rodar o projeto localmente.
 #
-#   mise run up        # gera a distribuição da api e sobe o banco (5432), a api (8080) e o importador (9090)
+#   mise run up        # gera a distribuição da api e sobe o banco (5432), a api (8080) e o importador gRPC (9090)
 #   mise run banco     # sobe só o PostgreSQL, para rodar a api pelo Gradle com mise run run:api
-#   curl -s localhost:8080/health ; curl -s localhost:9090/health
+#   curl -s localhost:8080/health
+#   grpcurl -plaintext localhost:9090 grpc.health.v1.Health/Check     # o importador fala gRPC, não HTTP
 #
 # Se uma porta já estiver ocupada na máquina, dá para trocar só a porta do host, sem mexer neste arquivo:
 #   FLUXO_API_PORTA=8081 FLUXO_IMPORTADOR_PORTA=9091 FLUXO_DB_PORTA=5433 mise run up
@@ -30,13 +31,13 @@ services:
       dockerfile: api/Dockerfile
     ports: ["${FLUXO_API_PORTA:-8080}:8080"]
     environment:
-      FLUXO_IMPORTADOR_URL: http://fluxo-importador:9090
+      FLUXO_IMPORTADOR_ENDERECO: fluxo-importador:9090   # gRPC: host:porta, o nome do serviço na rede do compose
       DB_URL: jdbc:postgresql://fluxo-db:5432/fluxo
       DB_USER: fluxo
       DB_PASSWORD: fluxo
     mem_limit: 512m                  # mesmo limite da hospedagem gratuita prevista
     depends_on:
-      fluxo-importador: { condition: service_started }
+      fluxo-importador: { condition: service_healthy }
       fluxo-db: { condition: service_healthy }
 
   fluxo-importador:
@@ -45,6 +46,11 @@ services:
     ports: ["${FLUXO_IMPORTADOR_PORTA:-9090}:9090"]
     environment:
       PORT: "9090"
+    healthcheck:                     # a imagem não tem shell nem curl: o próprio binário consulta o health check gRPC
+      test: ["CMD", "/importador", "saude"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
     mem_limit: 256m
 
 volumes:

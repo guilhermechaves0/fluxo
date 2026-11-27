@@ -2,6 +2,7 @@ package dominio
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -55,7 +56,13 @@ var (
 
 // LerExtrato reconhece o formato pelo conteúdo e converte o arquivo em lançamentos.
 // Aceita UTF-8 e Windows-1252, que é a codificação do OFX de vários bancos brasileiros.
-func LerExtrato(conteudo []byte) (Extrato, error) {
+// A leitura confere o contexto a cada bloco ou linha: se o prazo vencer ou a chamada for
+// cancelada, devolve um erro que satisfaz errors.Is(err, context.DeadlineExceeded) ou
+// errors.Is(err, context.Canceled).
+func LerExtrato(ctx context.Context, conteudo []byte) (Extrato, error) {
+	if err := interrompido(ctx); err != nil {
+		return Extrato{}, err
+	}
 	if tipo := tipoBinario(conteudo); tipo != "" {
 		return Extrato{}, fmt.Errorf("%w: o arquivo é %s, e o Fluxo lê extrato em OFX ou CSV. No Banco do Brasil, o "+
 			"OFX sai pelo internet banking, na opção Money 2000+ (ofx)", ErrFormatoDesconhecido, tipo)
@@ -68,12 +75,21 @@ func LerExtrato(conteudo []byte) (Extrato, error) {
 	}
 	maiusculo := strings.ToUpper(texto)
 	if strings.Contains(maiusculo, "<OFX>") || strings.HasPrefix(strings.TrimSpace(maiusculo), "OFXHEADER") {
-		return lerOFX(texto)
+		return lerOFX(ctx, texto)
 	}
-	return lerCSV(texto)
+	return lerCSV(ctx, texto)
 }
 
-func lerOFX(texto string) (Extrato, error) {
+// interrompido devolve o erro do contexto, com o nome da operação, quando o prazo venceu ou a chamada foi
+// cancelada. O %w mantém context.DeadlineExceeded e context.Canceled na cadeia para o errors.Is.
+func interrompido(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("leitura do extrato interrompida: %w", err)
+	}
+	return nil
+}
+
+func lerOFX(ctx context.Context, texto string) (Extrato, error) {
 	extrato := Extrato{Formato: FormatoOFX, Origem: origemOFX(texto)}
 	inicios := reAberturaSTMTTRN.FindAllStringIndex(texto, -1)
 	if len(inicios) == 0 {
@@ -81,6 +97,9 @@ func lerOFX(texto string) (Extrato, error) {
 	}
 	vistos := map[string]int{}
 	for i, inicio := range inicios {
+		if err := interrompido(ctx); err != nil {
+			return Extrato{}, err
+		}
 		fim := len(texto)
 		if i+1 < len(inicios) {
 			fim = inicios[i+1][0]

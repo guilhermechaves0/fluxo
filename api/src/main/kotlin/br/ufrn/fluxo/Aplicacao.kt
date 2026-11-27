@@ -19,23 +19,24 @@ import org.koin.core.module.Module
 import org.koin.ktor.plugin.Koin
 
 private const val PORTA_PADRAO = 8080
+private const val ENDERECO_PADRAO_DO_IMPORTADOR = "localhost:9090"
 
 fun main() {
     val porta = System.getenv("PORT")?.toIntOrNull() ?: PORTA_PADRAO
-    val urlImportador = System.getenv("FLUXO_IMPORTADOR_URL") ?: "http://localhost:9090"
+    val enderecoImportador = System.getenv("FLUXO_IMPORTADOR_ENDERECO") ?: ENDERECO_PADRAO_DO_IMPORTADOR
 
     // A engine CIO usa corrotinas e ocupa menos memória que a Netty.
     embeddedServer(CIO, port = porta, host = "0.0.0.0") {
-        modulo(urlImportador, ConfigBanco.doAmbiente())
+        modulo(enderecoImportador, ConfigBanco.doAmbiente())
     }.start(wait = true)
 }
 
 /** Produção: abre o pool de conexões, aplica as migrações e liga os casos de uso ao PostgreSQL. */
-fun Application.modulo(urlImportador: String, configBanco: ConfigBanco) {
+fun Application.modulo(enderecoImportador: String, configBanco: ConfigBanco) {
     val dataSource = criarDataSource(configBanco)
     migrar(dataSource)
     monitor.subscribe(ApplicationStopped) { dataSource.close() }
-    configurar(modulosDaAplicacao(urlImportador, Database.connect(dataSource)))
+    configurar(modulosDaAplicacao(enderecoImportador, Database.connect(dataSource)))
 }
 
 /**

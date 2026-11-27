@@ -37,6 +37,12 @@ com ajuda da ferramenta.
 | Erros da api em problem details e entradas que davam 500 | Para gerar a primeira versão do tratamento do 404, do 405 e do 406 que o Ktor devolvia sem corpo, da recusa do caractere nulo, do ano acima de 9999 e do escape de porcentagem inválido na consulta, e dos testes de rota, seguindo o `StatusPages` que já existia, e para ler o id só do caminho, porque `call.parameters` põe a consulta na frente | Testes de rota que conferem o status, o `application/problem+json` e o `type` de cada caso, uma revisão do código num contexto separado, que achou o `?id=` da consulta sobrepondo o id do caminho, `mise run ci` e chamadas com `curl` à api no Docker Compose, com os casos que antes respondiam sem corpo ou com 500 |
 | README da Sprint 1 e roteiros dos vídeos | Para rascunhar a seção da sprint, o registro da acessibilidade e os roteiros dos dois vídeos a partir das minhas anotações e do resultado do teste com o TalkBack | Leitura e revisão dos textos e conferência dos checklists com as rubricas das duas disciplinas |
 
+## Registro da Sprint 2
+
+| Parte do projeto | Como usei a IA | Como verifiquei |
+|---|---|---|
+| gRPC entre a api e o importador | Para gerar a primeira versão do contrato comentado, do uso de `context` no Go, do servidor gRPC com health check, do adaptador da api com prazo e dos testes, a partir do exemplo `avisos-go` da disciplina, e para rascunhar a ADR 0004 | Testes do Go pela pilha gRPC com `bufconn` e de prazo, testes do adaptador contra um servidor gRPC em memória, `mise run ci`, o sistema no Docker Compose com o importador no ar e parado, e uma revisão do código num contexto separado, que achou o limite de 4 MB na resposta do gRPC |
+
 ## Decisões minhas
 
 A ideia do produto, um assistente de finanças no estilo do Pierre sem Open Finance, foi minha. Discuti o MVP, a

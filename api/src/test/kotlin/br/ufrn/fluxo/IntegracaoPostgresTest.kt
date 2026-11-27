@@ -45,7 +45,7 @@ import kotlin.test.assertNotNull
  */
 class IntegracaoPostgresTest {
     private fun ApplicationTestBuilder.appComBanco(): HttpClient {
-        application { modulo(urlImportador = "http://localhost:9090", configBanco = config) }
+        application { modulo(enderecoImportador = "localhost:9090", configBanco = config) }
         return createClient { install(ContentNegotiation) { json() } }
     }
 

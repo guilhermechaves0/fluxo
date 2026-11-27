@@ -1,6 +1,7 @@
 package pdftexto
 
 import (
+	"context"
 	"errors"
 	"os"
 	"slices"
@@ -16,7 +17,7 @@ func TestLinhasLeAsDuasPaginasNaOrdemEComAcentos(t *testing.T) {
 	if !EhPDF(conteudo) {
 		t.Fatal("o arquivo de teste deveria ser reconhecido como PDF")
 	}
-	linhas, err := Linhas(conteudo)
+	linhas, err := Linhas(context.Background(), conteudo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +37,7 @@ func TestLinhasLeAsDuasPaginasNaOrdemEComAcentos(t *testing.T) {
 }
 
 func TestLinhasDePDFQuebradoDevolveErroSemPanico(t *testing.T) {
-	_, err := Linhas([]byte("%PDF-1.4\nisto não é um PDF de verdade"))
+	_, err := Linhas(context.Background(), []byte("%PDF-1.4\nisto não é um PDF de verdade"))
 	if !errors.Is(err, ErrIlegivel) {
 		t.Fatalf("esperava ErrIlegivel, obteve %v", err)
 	}

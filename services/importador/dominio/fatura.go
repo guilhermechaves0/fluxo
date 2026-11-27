@@ -1,6 +1,7 @@
 package dominio
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -22,7 +23,10 @@ var (
 // fechamento: mês depois do fechamento é do ano anterior, como numa parcela de dezembro numa
 // fatura de agosto. Na fatura, valor positivo é gasto e negativo é pagamento ou estorno. O banco
 // agrupa as compras em seções ("Restaurantes", "Serviços"), e o título da seção vira a categoria.
-func LerTextoDeFatura(linhas []string) (Extrato, error) {
+func LerTextoDeFatura(ctx context.Context, linhas []string) (Extrato, error) {
+	if err := interrompido(ctx); err != nil {
+		return Extrato{}, err
+	}
 	texto := strings.Join(linhas, "\n")
 	if !strings.Contains(strings.ToUpper(texto), "OUROCARD") {
 		return Extrato{}, fmt.Errorf("%w: o PDF não é uma fatura do cartão do Banco do Brasil, único PDF que o "+
@@ -37,6 +41,9 @@ func LerTextoDeFatura(linhas []string) (Extrato, error) {
 	dentro := false
 	secao := ""
 	for i, linha := range linhas {
+		if err := interrompido(ctx); err != nil {
+			return Extrato{}, err
+		}
 		normal := normalizar(linha)
 		switch {
 		case !dentro:

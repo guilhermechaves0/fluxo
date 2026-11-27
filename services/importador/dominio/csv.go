@@ -1,6 +1,7 @@
 package dominio
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -37,10 +38,13 @@ var nomesDeColuna = map[string][]string{
 	"categoria": {"categoria"},
 }
 
-func lerCSV(texto string) (Extrato, error) {
+func lerCSV(ctx context.Context, texto string) (Extrato, error) {
 	linhas := strings.Split(texto, "\n")
 	primeira := ""
 	for i := 0; i < len(linhas) && i < linhasDePreambulo; i++ {
+		if err := interrompido(ctx); err != nil {
+			return Extrato{}, err
+		}
 		if strings.TrimSpace(linhas[i]) == "" {
 			continue
 		}
@@ -57,11 +61,15 @@ func lerCSV(texto string) (Extrato, error) {
 				if err != nil {
 					return Extrato{}, fmt.Errorf("%w: CSV malformado (%v)", ErrFormatoDesconhecido, err)
 				}
-				return aplicar(layout, resto), nil
+				return aplicar(ctx, layout, resto)
 			}
 		}
 	}
-	if extrato, ok := semCabecalho(linhas); ok {
+	extrato, ok, err := semCabecalho(ctx, linhas)
+	if err != nil {
+		return Extrato{}, err
+	}
+	if ok {
 		return extrato, nil
 	}
 	colunas := strings.Split(primeira, ";")
@@ -140,10 +148,13 @@ func reconhecer(cabecalho []string) (layoutCSV, bool) {
 	return l, true
 }
 
-func aplicar(l layoutCSV, linhas []registro) Extrato {
+func aplicar(ctx context.Context, l layoutCSV, linhas []registro) (Extrato, error) {
 	extrato := Extrato{Formato: FormatoCSV, Origem: l.origem}
 	vistos := map[string]int{}
 	for _, r := range linhas {
+		if err := interrompido(ctx); err != nil {
+			return Extrato{}, err
+		}
 		posicao := r.linha
 		if vazia(r.campos) {
 			continue
@@ -162,7 +173,7 @@ func aplicar(l layoutCSV, linhas []registro) Extrato {
 		vistos[lancamento.IDExterno]++
 		extrato.Lancamentos = append(extrato.Lancamentos, lancamento)
 	}
-	return extrato
+	return extrato, nil
 }
 
 func (l layoutCSV) lancamento(campos []string) (Lancamento, string) {
@@ -226,20 +237,23 @@ func (l layoutCSV) centavos(campo func(int) string) (int64, error) {
 }
 
 // semCabecalho aceita o formato antigo "data;descricao;valor", sem linha de cabeçalho.
-func semCabecalho(linhas []string) (Extrato, bool) {
+func semCabecalho(ctx context.Context, linhas []string) (Extrato, bool, error) {
 	extrato := Extrato{Formato: FormatoCSV, Origem: "CSV"}
 	for i, linha := range linhas {
+		if err := interrompido(ctx); err != nil {
+			return Extrato{}, false, err
+		}
 		if strings.TrimSpace(linha) == "" {
 			continue
 		}
 		partes := strings.Split(strings.TrimSpace(linha), ";")
 		if len(partes) != camposCSV {
-			return Extrato{}, false
+			return Extrato{}, false, nil
 		}
 		data, err := dataCSV(partes[0])
 		if err != nil {
 			if len(extrato.Lancamentos) == 0 && i == 0 {
-				return Extrato{}, false
+				return Extrato{}, false, nil
 			}
 			extrato.Ignorados = append(extrato.Ignorados, Ignorado{Posicao: i + 1, Motivo: err.Error()})
 			continue
@@ -256,7 +270,7 @@ func semCabecalho(linhas []string) (Extrato, bool) {
 		extrato.Lancamentos[i].IDExterno = idGerado(extrato.Origem, extrato.Lancamentos[i], vistos)
 		vistos[extrato.Lancamentos[i].IDExterno]++
 	}
-	return extrato, len(extrato.Lancamentos) > 0
+	return extrato, len(extrato.Lancamentos) > 0, nil
 }
 
 // dataCSV aceita dd/mm/aaaa, dd/mm/aa, dd-mm-aaaa e aaaa-mm-dd (com ou sem hora) e devolve aaaa-mm-dd.

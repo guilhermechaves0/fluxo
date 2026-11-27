@@ -1,7 +1,8 @@
 # Regra de dependência do serviço Go, conferida pelo arch-go no CI.
 #
 # O pacote importador/dominio só interpreta texto (OFX, CSV e as linhas da fatura em PDF). Se ele
-# importar net/http, encoding/json, database/sql ou a biblioteca de PDF, a verificação falha.
+# importar net/http, encoding/json, database/sql, gRPC, protobuf ou a biblioteca de PDF, a verificação falha.
+# A tradução entre o contrato gRPC e o domínio fica em grpcapi.
 version: 1
 threshold:
   compliance: 100
@@ -13,5 +14,9 @@ dependenciesRules:
         - "net/http"
         - "encoding/json"
         - "database/sql"
+      internal:
+        - "github.com/guilhermechaves0/fluxo/services/gen/*" # o contrato gerado, que é código do próprio módulo
       external:
+        - "google.golang.org/grpc*"
+        - "google.golang.org/protobuf*"
         - "github.com/ledongthuc/pdf" # a leitura de PDF fica em importador/pdftexto (ADR 0002)

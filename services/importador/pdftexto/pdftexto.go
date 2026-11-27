@@ -5,6 +5,7 @@ package pdftexto
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -26,7 +27,7 @@ func EhPDF(conteudo []byte) bool {
 // Linhas devolve o texto de cada linha visual do documento, com as palavras separadas por um
 // espaço. A biblioteca entra em pânico com alguns PDFs malformados; o recover transforma isso
 // em ErrIlegivel.
-func Linhas(conteudo []byte) (linhas []string, err error) {
+func Linhas(ctx context.Context, conteudo []byte) (linhas []string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			linhas, err = nil, fmt.Errorf("%w: %v", ErrIlegivel, r)
@@ -40,6 +41,9 @@ func Linhas(conteudo []byte) (linhas []string, err error) {
 		return nil, fmt.Errorf("%w: %v", ErrIlegivel, err)
 	}
 	for n := 1; n <= leitor.NumPage(); n++ {
+		if err := ctx.Err(); err != nil {
+			return nil, fmt.Errorf("leitura do PDF interrompida: %w", err)
+		}
 		pagina := leitor.Page(n)
 		if pagina.V.IsNull() {
 			continue

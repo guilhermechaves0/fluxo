@@ -1,6 +1,7 @@
 package dominio
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -30,7 +31,7 @@ var faturaDeExemplo = []string{
 }
 
 func TestLerTextoDeFatura(t *testing.T) {
-	extrato, err := LerTextoDeFatura(faturaDeExemplo)
+	extrato, err := LerTextoDeFatura(context.Background(), faturaDeExemplo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +76,7 @@ func TestLerTextoDeFaturaRecusaOQueNaoEhFaturaDoBB(t *testing.T) {
 	}
 	for nome, linhas := range casos {
 		t.Run(nome, func(t *testing.T) {
-			if _, err := LerTextoDeFatura(linhas); !errors.Is(err, ErrFormatoDesconhecido) {
+			if _, err := LerTextoDeFatura(context.Background(), linhas); !errors.Is(err, ErrFormatoDesconhecido) {
 				t.Fatalf("esperava ErrFormatoDesconhecido, obteve %v", err)
 			}
 		})
