@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"testing"
@@ -17,6 +18,7 @@ import (
 
 	importadorv1 "github.com/guilhermechaves0/fluxo/services/gen/fluxo/importador/v1"
 	"github.com/guilhermechaves0/fluxo/services/importador/dominio"
+	"github.com/guilhermechaves0/fluxo/services/importador/pdftexto"
 )
 
 const tamanhoDoBuffer = 1 << 20
@@ -109,6 +111,10 @@ func TestErrosDoDominioViramCodigosGRPC(t *testing.T) {
 		{"arquivo vazio", []byte("   "), nil, codes.InvalidArgument},
 		{"formato desconhecido", []byte("coluna1;coluna2\nx;y\n"), nil, codes.InvalidArgument},
 		{"PDF que não é fatura", arquivo(t, "bb-fatura.pdf")[:200], nil, codes.InvalidArgument},
+		{"PDF ilegível", []byte("x"), func(context.Context, []byte) (dominio.Extrato, error) {
+			return dominio.Extrato{}, fmt.Errorf("%w: %w: pânico interno da biblioteca", dominio.ErrFormatoDesconhecido,
+				pdftexto.ErrIlegivel)
+		}, codes.InvalidArgument},
 		{"grande demais", bytes.Repeat([]byte("x"), TamanhoMaximo+1), nil, codes.ResourceExhausted},
 		{"prazo vencido no domínio", []byte("x"), func(context.Context, []byte) (dominio.Extrato, error) {
 			return dominio.Extrato{}, errors.Join(errors.New("leitura interrompida"), context.DeadlineExceeded)
@@ -129,6 +135,9 @@ func TestErrosDoDominioViramCodigosGRPC(t *testing.T) {
 			_, err := cliente(t, servidor).Importar(context.Background(), &importadorv1.ImportarRequest{Conteudo: c.conteudo})
 			if status.Code(err) != c.codigo {
 				t.Fatalf("esperava %v, obteve %v", c.codigo, err)
+			}
+			if c.nome == "PDF ilegível" && (status.Convert(err).Message() != "não consegui ler o PDF") {
+				t.Errorf("a mensagem do PDF ilegível deve ser fixa, obteve %q", status.Convert(err).Message())
 			}
 			if c.codigo == codes.Internal && bytes.Contains([]byte(err.Error()), []byte("sigiloso")) {
 				t.Errorf("o erro interno não pode vazar para quem chama: %v", err)
