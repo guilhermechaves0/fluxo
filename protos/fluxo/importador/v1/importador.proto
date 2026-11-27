@@ -1,28 +1,36 @@
 // Contrato gRPC entre a api (Kotlin) e o importador (Go), DIM0547.
 //
-// O CI roda `buf lint` e `buf build` neste arquivo a cada push. A api passa a chamar o
-// importador por gRPC na Sprint 2; até lá a comunicação é HTTP com JSON. Os stubs de Kotlin
-// e de Go serão gerados a partir deste arquivo.
+// O CI roda `buf lint` e `buf build` neste arquivo a cada push. A api (Kotlin) chama o importador
+// (Go) por gRPC. Os stubs de Go são gerados com `buf generate` e ficam em services/gen; os de Kotlin
+// são gerados pelo Gradle no build da api.
 
 syntax = "proto3";
 
 package fluxo.importador.v1;
 
-option go_package = "github.com/guilhermechaves0/fluxo/services/importador/pb;pb";
+option go_package = "github.com/guilhermechaves0/fluxo/services/gen/fluxo/importador/v1;importadorv1";
 option java_multiple_files = true;
 option java_package = "br.ufrn.fluxo.importador.v1";
 
 // Formato do arquivo de extrato.
 enum Formato {
+  // Valor padrão do proto3. Na requisição pede que o importador reconheça o formato pelo conteúdo.
   FORMATO_NAO_ESPECIFICADO = 0;
+  // Open Financial Exchange.
   FORMATO_OFX = 1;
+  // Planilha em texto separada por vírgula ou ponto e vírgula.
   FORMATO_CSV = 2;
+  // Fatura do cartão em PDF.
+  FORMATO_PDF = 3;
 }
 
 // Receita ou despesa. O valor do lançamento é sempre positivo.
 enum Tipo {
+  // Valor padrão do proto3; o importador não devolve este valor.
   TIPO_NAO_ESPECIFICADO = 0;
+  // Entrada de dinheiro.
   TIPO_RECEITA = 1;
+  // Saída de dinheiro.
   TIPO_DESPESA = 2;
 }
 
@@ -32,37 +40,51 @@ message Lancamento {
   string id_externo = 1;
   // Data no formato AAAA-MM-DD.
   string data = 2;
+  // Valor absoluto em centavos, sempre positivo; o sinal está em `tipo`.
   int64 valor_centavos = 3;
+  // Texto do lançamento como o banco informa.
   string descricao = 4;
+  // Receita ou despesa.
   Tipo tipo = 5;
   // Como o banco classifica o lançamento: seção da fatura ou coluna Categoria do CSV. Vazia quando o
   // extrato não informa.
   string categoria = 6;
 }
 
+// Pedido de leitura de um extrato.
 message ImportarRequest {
+  // Bytes do arquivo, de até 5 MB. OFX e CSV em UTF-8 ou Windows-1252, ou PDF.
   bytes conteudo = 1;
+  // Formato informado por quem chama. O importador reconhece pelo conteúdo e hoje ignora este campo.
   Formato formato = 2;
 }
 
+// Resultado da leitura de um extrato.
 message ImportarResponse {
+  // Lançamentos lidos, na ordem do arquivo.
   repeated Lancamento lancamentos = 1;
   // Quantidade de linhas que não puderam ser lidas.
   int32 ignorados = 2;
   // Banco e tipo de extrato reconhecidos, como "Nubank (conta)", ou só o formato.
   string origem = 3;
+  // Formato que o importador reconheceu no arquivo.
   Formato formato = 4;
   // Cada bloco OFX ou linha CSV ignorada, com o motivo.
   repeated LinhaIgnorada linhas_ignoradas = 5;
 }
 
+// Bloco ou linha do extrato que não virou lançamento.
 message LinhaIgnorada {
   // Número do bloco no OFX ou da linha no CSV, a partir de 1.
   int32 posicao = 1;
+  // Por que a linha não foi lida.
   string motivo = 2;
 }
 
 // Converte extratos bancários em lançamentos.
 service ImportadorService {
+  // Lê o extrato e devolve os lançamentos e as linhas ignoradas. Arquivo vazio ou de formato não
+  // reconhecido volta como INVALID_ARGUMENT; arquivo acima de 5 MB, como RESOURCE_EXHAUSTED; prazo
+  // vencido ou chamada cancelada, como DEADLINE_EXCEEDED ou CANCELED.
   rpc Importar(ImportarRequest) returns (ImportarResponse);
 }

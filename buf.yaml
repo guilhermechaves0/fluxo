@@ -2,6 +2,7 @@
 #
 #   buf lint     # verifica o estilo do .proto
 #   buf build    # compila o módulo
+#   buf generate # gera os stubs de Go em services/gen (buf.gen.yaml)
 #
 # O arquivo fica em protos/fluxo/importador/v1/ porque o buf exige que o diretório
 # corresponda ao package `fluxo.importador.v1`.
@@ -11,6 +12,7 @@ modules:
 lint:
   use:
     - STANDARD
+    - COMMENTS # todo serviço, rpc, mensagem, campo e enum precisa de comentário
   enum_zero_value_suffix: _NAO_ESPECIFICADO
 breaking:
   use:

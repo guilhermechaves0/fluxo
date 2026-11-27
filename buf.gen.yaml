@@ -1,0 +1,11 @@
+# Geração dos stubs de Go do importador, no mesmo esquema do exemplo da disciplina: plugins remotos do
+# Buf, sem nada para instalar. Rode `buf generate` na raiz depois de mexer no .proto e versione o resultado.
+# Os stubs de Kotlin não passam por aqui: o Gradle os gera no build da api, a partir do mesmo .proto.
+version: v2
+plugins:
+  - remote: buf.build/protocolbuffers/go:v1.36.12
+    out: services/gen
+    opt: paths=source_relative
+  - remote: buf.build/grpc/go:v1.6.0
+    out: services/gen
+    opt: paths=source_relative
