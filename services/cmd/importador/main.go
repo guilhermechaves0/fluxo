@@ -31,7 +31,7 @@ const (
 	portaPadrao     = "9090"
 	folgaDaMensagem = 1 << 20 // o protobuf acrescenta alguns bytes ao conteúdo; 1 MB sobra
 	prazoDaSaude    = 2 * time.Second
-	prazoDoDesligar = 10 * time.Second
+	prazoDoDesligar = 8 * time.Second // abaixo dos 10 s que o docker stop espera antes do SIGKILL
 )
 
 func main() {
