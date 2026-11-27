@@ -10,7 +10,8 @@ import br.ufrn.fluxo.aplicacao.RepositorioDeContas
 import br.ufrn.fluxo.aplicacao.RepositorioDeTransacoes
 import br.ufrn.fluxo.aplicacao.TransacoesDaConta
 import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
+import io.grpc.netty.shaded.io.netty.channel.ChannelOption
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -26,13 +27,18 @@ import org.koin.dsl.onClose
 // do importador pode passar do tamanho do extrato: cada lançamento carrega id, data, descrição e tipo.
 private const val TAMANHO_MAXIMO_DA_RESPOSTA = 32 * 1024 * 1024
 
+// Com o importador fora do ar o TCP ficaria tentando conectar até o prazo da chamada (10 s). Com 2 s a
+// api responde 503 logo, e a rede interna conecta bem antes disso.
+private const val PRAZO_PARA_CONECTAR_MS = 2_000
+
 /**
  * Canal para o importador em Go, com sua configuração de produção. Sem TLS: o importador só é alcançável
  * pela rede interna do compose ou da plataforma.
  */
-fun canalDoImportador(enderecoImportador: String): ManagedChannel = ManagedChannelBuilder
+fun canalDoImportador(enderecoImportador: String): ManagedChannel = NettyChannelBuilder
     .forTarget(enderecoImportador)
     .usePlaintext()
+    .withOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, PRAZO_PARA_CONECTAR_MS)
     .maxInboundMessageSize(TAMANHO_MAXIMO_DA_RESPOSTA)
     .build()
 
