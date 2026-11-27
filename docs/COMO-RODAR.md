@@ -35,11 +35,27 @@ O `local.properties` guarda o caminho do SDK na máquina e fica fora do reposit�
 | `mise run run:android` | Instala e abre o app no celular conectado por USB |
 | `mise run run:deeplink t-03` | Abre no celular o detalhe da transação `t-03` pelo link `fluxo://transacao/t-03` |
 
+## Só com o Docker
+
+Numa máquina que só tem o Docker, sem mise, JDK nem SDK do Android, este comando constrói as duas imagens dentro
+dos containers e sobe o banco, o importador e a api:
+
+```bash
+docker compose up --build
+docker compose ps    # os três serviços aparecem como healthy
+```
+
 ## Banco de dados
 
 A api grava no PostgreSQL 17. Ao subir, ela aplica as migrações de `api/src/main/resources/db/migration` com o
 Flyway, então um banco vazio chega ao esquema atual sem nenhum passo manual. Os dados ficam no volume
 `fluxo-db-dados`. Para começar do zero, use `docker compose down -v`.
+
+Para aplicar só as migrações, sem subir o servidor, a api tem o subcomando `migrar`:
+
+```bash
+docker compose run --rm fluxo-api migrar
+```
 
 A api lê o endereço do banco de variáveis de ambiente. Os valores padrão são os do banco do Docker Compose:
 
@@ -106,3 +122,27 @@ acompanha o código, porque não existe arquivo escrito à mão. Com a api no ar
 Trocar a porta da api muda a porta dos dois endereços. Com `FLUXO_API_PORTA=8081` no Docker Compose, ou `PORT=8081` ao
 rodar pelo Gradle, a Swagger UI passa a ficar em http://localhost:8081/swagger. A página carrega os arquivos da
 Swagger UI de unpkg.com, então precisa de internet.
+
+## Imagens e implantação
+
+O CI constrói as imagens da api e do importador em todo pull request. Na `main`, depois que os testes passam, ele
+publica as duas no GitHub Container Registry, com a etiqueta do commit e `latest`:
+
+- `ghcr.io/guilhermechaves0/fluxo/api`
+- `ghcr.io/guilhermechaves0/fluxo/importador`
+
+Em seguida o job `Migrar o banco` roda `api migrar` com a imagem recém-publicada contra o banco gerenciado, no Neon,
+e pede a nova versão ao Render. Esses passos leem os segredos do repositório, em Settings, Secrets and variables,
+Actions. Sem os segredos, o job termina verde com um aviso.
+
+| Segredo | Valor |
+|---|---|
+| `DB_URL` | `jdbc:postgresql://HOST/BANCO?sslmode=require`, com o host e o banco do Neon |
+| `DB_USER` | o usuário do banco |
+| `DB_PASSWORD` | a senha do banco |
+| `RENDER_DEPLOY_HOOK` | o endereço do gancho de implantação do serviço no Render. É opcional: sem ele, a nova versão entra pelo painel |
+
+No Render, o `render.yaml` da raiz descreve a api como um web service do plano gratuito, a partir da imagem publicada,
+com `GET /health` como health check. `DB_URL`, `DB_USER` e `DB_PASSWORD` são preenchidos no painel e não ficam no
+repositório. O importador não vai para o ar no plano gratuito, então a importação de extrato responde `503` em
+produção e o resto da api funciona. As razões estão na [ADR 0005](decisoes/0005-implantacao-com-ghcr-render-e-neon.md).

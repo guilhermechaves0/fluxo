@@ -1,8 +1,10 @@
 # Serviços para rodar o projeto localmente.
 #
-#   mise run up        # gera a distribuição da api e sobe o banco (5432), a api (8080) e o importador gRPC (9090)
+#   mise run up        # constrói as imagens (a api compila dentro do container) e sobe o banco (5432), a api (8080) e o importador gRPC (9090)
 #   mise run banco     # sobe só o PostgreSQL, para rodar a api pelo Gradle com mise run run:api
 #   curl -s localhost:8080/health
+#   docker compose ps                                                 # os três serviços ficam healthy
+#   docker compose run --rm fluxo-api migrar                          # só aplica as migrações e termina
 #   grpcurl -plaintext localhost:9090 grpc.health.v1.Health/Check     # o importador fala gRPC, não HTTP
 #
 # Se uma porta já estiver ocupada na máquina, dá para trocar só a porta do host, sem mexer neste arquivo:
@@ -27,7 +29,7 @@ services:
 
   fluxo-api:
     build:
-      context: .                     # raiz do repositório; o Dockerfile copia api/build/install/api
+      context: .                     # raiz do repositório; o Dockerfile compila a api dentro do container
       dockerfile: api/Dockerfile
     ports: ["${FLUXO_API_PORTA:-8080}:8080"]
     environment:
@@ -35,6 +37,12 @@ services:
       DB_URL: jdbc:postgresql://fluxo-db:5432/fluxo
       DB_USER: fluxo
       DB_PASSWORD: fluxo
+    healthcheck:                     # a imagem traz o curl só para isto
+      test: ["CMD-SHELL", "curl -fsS http://localhost:$${PORT:-8080}/health || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
     mem_limit: 512m                  # mesmo limite da hospedagem gratuita prevista
     depends_on:
       fluxo-importador: { condition: service_healthy }

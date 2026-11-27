@@ -1,13 +1,17 @@
-# Contexto da imagem da api. A imagem usa apenas api/build/install/api, gerado por
-# ./gradlew :api:installDist.
+# Contexto das imagens (a api usa a raiz; o importador usa services/). Fica de fora o que o build
+# regenera ou que a imagem não usa.
 .git
+.github
 .gradle
 .kotlin
 .idea
+**/build
+**/.gradle
+local.properties
 app
 app-android
-shared/build
-services
-protos
 docs
-local.properties
+services
+*.md
+.env
+*.local

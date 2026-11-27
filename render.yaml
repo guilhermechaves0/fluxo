@@ -1,0 +1,47 @@
+# Blueprint do Render para a api do Fluxo. O banco é gerenciado fora, no Neon (AWS US East 2, Ohio),
+# por isso a api fica na região ohio, perto dele.
+#
+# Limites do plano gratuito do Render:
+# - serviço privado (pserv) não tem instância gratuita; o plano starter é pago;
+# - um web service gratuito envia, mas não recebe, tráfego pela rede privada;
+# - o endereço público dos web services não encaminha gRPC.
+# Por isso o importador em Go, que fala gRPC com a api, não sobe no plano gratuito. A api sobe sem ele
+# e responde 503 só na importação de extrato; o resto (contas e transações) funciona.
+#
+# O preDeployCommand também só existe em plano pago. No gratuito, a api aplica as migrações do Flyway ao
+# subir. O CI publica a imagem, roda `migrar` contra o banco e, se o segredo RENDER_DEPLOY_HOOK estiver
+# configurado no repositório, pede ao Render a nova versão (o serviço não reimplanta sozinho quando a
+# etiqueta latest muda). Sem o gancho, a implantação é manual no painel do Render.
+services:
+  # A api: pública, com health check. A imagem é publicada pelo CI na branch main.
+  - type: web
+    name: fluxo-api
+    runtime: image
+    image:
+      url: ghcr.io/guilhermechaves0/fluxo/api:latest
+    plan: free
+    region: ohio
+    healthCheckPath: /health
+    envVars:
+      # Segredos: preenchidos no painel do Render (sync: false), nunca escritos no repositório.
+      # DB_URL tem o formato jdbc:postgresql://HOST/BANCO?sslmode=require.
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+  # O importador (só com plano pago). Privado, sem endereço público; a api o encontra pelo nome na rede
+  # interna. Para ligar: descomente este bloco e acrescente à api a variável
+  # FLUXO_IMPORTADOR_ENDERECO com o valor fluxo-importador:9090.
+  # - type: pserv
+  #   name: fluxo-importador
+  #   runtime: image
+  #   image:
+  #     url: ghcr.io/guilhermechaves0/fluxo/importador:latest
+  #   plan: starter
+  #   region: ohio
+  #   envVars:
+  #     - key: PORT
+  #       value: "9090"

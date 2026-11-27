@@ -37,8 +37,8 @@ description = "Roda ktlint e detekt no Kotlin, gofmt, go vet e arch-go no Go e b
 depends = ["lint:kotlin", "lint:go", "lint:proto"]
 
 [tasks.up]
-description = "Gera a distribuição da api e sobe o banco (5432), a api (8080) e o importador gRPC (9090) no Docker"
-run = ["./gradlew :api:installDist", "docker compose up --build"]
+description = "Constrói as imagens e sobe o banco (5432), a api (8080) e o importador gRPC (9090) no Docker"
+run = "docker compose up --build"
 
 [tasks.ci]
 description = "Roda lint, build e testes na mesma ordem do GitHub Actions"
