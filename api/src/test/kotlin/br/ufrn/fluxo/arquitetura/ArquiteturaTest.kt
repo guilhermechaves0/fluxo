@@ -15,6 +15,9 @@ private const val APLICACAO = "$RAIZ.aplicacao.."
 private const val ADAPTADORES = "$RAIZ.adaptadores.."
 private const val VIOLACAO = "$RAIZ.arquitetura.violacao"
 
+/** O gRPC, o protobuf e as classes geradas de protos/ (java_package br.ufrn.fluxo.importador.v1). */
+private val DEPENDENCIAS_DE_GRPC = arrayOf("io.grpc..", "com.google.protobuf..", "$RAIZ.importador..")
+
 /**
  * A regra de dependência entre as camadas, conferida pelo ArchUnit no código compilado.
  *
@@ -38,6 +41,12 @@ class ArquiteturaTest {
 
     @Test
     fun aplicacaoNaoConheceFrameworkNemInfraestrutura() = regraDaAplicacao(APLICACAO).check(classes)
+
+    @Test
+    fun dominioNaoConheceGrpcNemOContratoGerado() = regraSemGrpc(DOMINIO).check(classes)
+
+    @Test
+    fun aplicacaoNaoConheceGrpcNemOContratoGerado() = regraSemGrpc(APLICACAO).check(classes)
 
     @Test
     fun aplicacaoNaoDependeDosAdaptadores() = noClasses()
@@ -66,6 +75,15 @@ class ArquiteturaTest {
         val contaminadas = ClassFileImporter().importPackages(VIOLACAO)
         val resultado = regraDoDominio("$VIOLACAO.dominio..").evaluate(contaminadas)
         assertTrue(resultado.hasViolation(), "a regra do domínio deveria acusar o import de Ktor")
+    }
+
+    @Test
+    fun aRegraDeGrpcAcusaQuemImportaGrpcOuOContratoGerado() {
+        val contaminadas = ClassFileImporter().importPackages(VIOLACAO)
+        listOf("$VIOLACAO.dominio..", "$VIOLACAO.aplicacao..").forEach {
+            val resultado = regraSemGrpc(it).evaluate(contaminadas)
+            assertTrue(resultado.hasViolation(), "a regra de gRPC deveria acusar a classe de $it")
+        }
     }
 
     @Test
@@ -100,4 +118,15 @@ private fun regraDaAplicacao(pacote: String): ArchRule = noClasses()
         "org.postgresql..",
         "java.sql..",
         "javax.sql..",
+        *DEPENDENCIAS_DE_GRPC,
     ).because("casos de uso e portas não sabem de HTTP, de JSON, de banco nem de injeção de dependência")
+
+private fun regraSemGrpc(pacote: String): ArchRule = noClasses()
+    .that()
+    .resideInAPackage(pacote)
+    .should()
+    .dependOnClassesThat()
+    .resideInAnyPackage(*DEPENDENCIAS_DE_GRPC)
+    .because(
+        "o contrato gRPC é detalhe de adaptador: a porta fala em tipos do domínio, e só adaptadores/importador traduz",
+    )
