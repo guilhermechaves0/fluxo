@@ -1,140 +1,98 @@
-// Serviço importador do Fluxo (DIM0547).
+// Servidor gRPC do importador do Fluxo (DIM0547).
 //
-// Recebe extratos bancários em OFX, CSV ou PDF (fatura do cartão do Banco do Brasil) e devolve
-// os lançamentos. Expõe /health e POST /importar, que lê o corpo da requisição com o parser de
-// importador/dominio. Fora a leitura de PDF (ADR 0002), usa só a biblioteca padrão.
+// Recebe extratos bancários em OFX, CSV ou PDF (fatura do cartão do Banco do Brasil) pelo
+// ImportadorService e devolve os lançamentos, lidos com o parser de importador/dominio.
+//
+//	go run ./cmd/importador          # escuta na porta 9090
+//	PORT=9091 go run ./cmd/importador
+//	importador saude                 # pergunta ao serviço local se está de pé (healthcheck do container)
 package main
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
+	"context"
 	"log/slog"
-	"net/http"
+	"net"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/guilhermechaves0/fluxo/services/importador/dominio"
-	"github.com/guilhermechaves0/fluxo/services/importador/pdftexto"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
+
+	importadorv1 "github.com/guilhermechaves0/fluxo/services/gen/fluxo/importador/v1"
+	"github.com/guilhermechaves0/fluxo/services/grpcapi"
 )
 
-const tamanhoMaximo = 5 << 20 // 5 MB: um extrato de vários anos ainda cabe com folga
+const (
+	portaPadrao     = "9090"
+	folgaDaMensagem = 1 << 20 // o protobuf acrescenta alguns bytes ao conteúdo; 1 MB sobra
+	prazoDaSaude    = 2 * time.Second
+	prazoDoDesligar = 10 * time.Second
+)
 
 func main() {
 	porta := os.Getenv("PORT")
 	if porta == "" {
-		porta = "9090"
+		porta = portaPadrao
+	}
+	if len(os.Args) > 1 && os.Args[1] == "saude" {
+		os.Exit(verificarSaude(porta))
+	}
+	lis, err := net.Listen("tcp", ":"+porta)
+	if err != nil {
+		slog.Error("não abriu a porta", "porta", porta, "erro", err)
+		os.Exit(1)
 	}
 
-	srv := &http.Server{
-		Addr:              ":" + porta,
-		Handler:           rotas(),
-		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout:       30 * time.Second,
-		WriteTimeout:      30 * time.Second,
-		IdleTimeout:       60 * time.Second,
-	}
+	// O padrão do gRPC é 4 MB por mensagem, abaixo do limite de 5 MB do extrato.
+	srv := grpc.NewServer(grpc.MaxRecvMsgSize(grpcapi.TamanhoMaximo + folgaDaMensagem))
+	importadorv1.RegisterImportadorServiceServer(srv, grpcapi.NovoServidor())
+
+	// Health check padrão do gRPC: o docker compose e as plataformas perguntam se o serviço está de pé.
+	saude := health.NewServer()
+	healthpb.RegisterHealthServer(srv, saude)
+	saude.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+	saude.SetServingStatus(importadorv1.ImportadorService_ServiceDesc.ServiceName, healthpb.HealthCheckResponse_SERVING)
+
+	// Reflection: deixa o grpcurl descobrir o serviço sem ter o .proto em mãos.
+	reflection.Register(srv)
+
+	// Ao receber SIGTERM (docker stop), para de aceitar chamadas novas e termina as que estão em andamento.
+	// Se alguma não terminar a tempo, Stop corta.
+	go func() {
+		sinal := make(chan os.Signal, 1)
+		signal.Notify(sinal, syscall.SIGINT, syscall.SIGTERM)
+		<-sinal
+		slog.Info("encerrando")
+		saude.Shutdown()
+		time.AfterFunc(prazoDoDesligar, srv.Stop)
+		srv.GracefulStop()
+	}()
 
 	slog.Info("importador no ar", "porta", porta)
-	if err := srv.ListenAndServe(); err != nil {
-		slog.Error("servidor encerrou", "erro", err)
+	if err := srv.Serve(lis); err != nil {
+		slog.Error("servidor parou", "erro", err)
 		os.Exit(1)
 	}
 }
 
-// rotas monta o roteador. Fica fora do main para que os testes não precisem abrir uma porta.
-func rotas() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"status":"UP"}`))
-	})
-	mux.HandleFunc("POST /importar", importar)
-	return mux
-}
-
-// importar lê o arquivo inteiro do corpo e responde com os lançamentos e as linhas ignoradas.
-// O conteúdo do extrato não vai para o log, só as contagens.
-func importar(w http.ResponseWriter, r *http.Request) {
-	conteudo, err := io.ReadAll(http.MaxBytesReader(w, r.Body, tamanhoMaximo))
-	var grande *http.MaxBytesError
-	if errors.As(err, &grande) {
-		problema(w, http.StatusRequestEntityTooLarge, "extrato-grande-demais", "O extrato passa de 5 MB.")
-		return
-	}
+// verificarSaude chama o health check gRPC do próprio serviço. A imagem final não tem shell nem curl,
+// então o healthcheck do compose roda este subcomando.
+func verificarSaude(porta string) int {
+	conn, err := grpc.NewClient("localhost:"+porta, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		problema(w, http.StatusBadRequest, "corpo-invalido", "Não consegui ler o corpo da requisição.")
-		return
+		return 1
 	}
-	extrato, err := ler(conteudo)
-	switch {
-	case errors.Is(err, dominio.ErrArquivoVazio):
-		problema(w, http.StatusBadRequest, "extrato-vazio", "O arquivo está vazio.")
-		return
-	case err != nil:
-		problema(w, http.StatusUnprocessableEntity, "extrato-nao-reconhecido", err.Error())
-		return
+	defer func() { _ = conn.Close() }()
+	ctx, cancelar := context.WithTimeout(context.Background(), prazoDaSaude)
+	defer cancelar()
+	resp, err := healthpb.NewHealthClient(conn).Check(ctx, &healthpb.HealthCheckRequest{})
+	if err != nil || resp.GetStatus() != healthpb.HealthCheckResponse_SERVING {
+		return 1
 	}
-	slog.Info("extrato lido", "formato", extrato.Formato, "origem", extrato.Origem,
-		"lancamentos", len(extrato.Lancamentos), "ignorados", len(extrato.Ignorados))
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(paraResposta(extrato))
-}
-
-// ler manda o PDF para a extração de texto antes do domínio; OFX e CSV vão direto.
-func ler(conteudo []byte) (dominio.Extrato, error) {
-	if !pdftexto.EhPDF(conteudo) {
-		return dominio.LerExtrato(conteudo)
-	}
-	linhas, err := pdftexto.Linhas(conteudo)
-	if err != nil {
-		return dominio.Extrato{}, fmt.Errorf("%w: %v", dominio.ErrFormatoDesconhecido, err)
-	}
-	return dominio.LerTextoDeFatura(linhas)
-}
-
-type resposta struct {
-	Formato     string           `json:"formato"`
-	Origem      string           `json:"origem"`
-	Lancamentos []lancamentoJSON `json:"lancamentos"`
-	Ignorados   []ignoradoJSON   `json:"ignorados"`
-}
-
-type lancamentoJSON struct {
-	IDExterno     string `json:"idExterno"`
-	Data          string `json:"data"`
-	ValorCentavos int64  `json:"valorCentavos"`
-	Descricao     string `json:"descricao"`
-	Tipo          string `json:"tipo"`
-	Categoria     string `json:"categoria,omitempty"`
-}
-
-type ignoradoJSON struct {
-	Posicao int    `json:"posicao"`
-	Motivo  string `json:"motivo"`
-}
-
-func paraResposta(e dominio.Extrato) resposta {
-	r := resposta{Formato: string(e.Formato), Origem: e.Origem, Lancamentos: []lancamentoJSON{},
-		Ignorados: []ignoradoJSON{}}
-	for _, l := range e.Lancamentos {
-		r.Lancamentos = append(r.Lancamentos, lancamentoJSON{IDExterno: l.IDExterno, Data: l.Data,
-			ValorCentavos: l.ValorCentavos, Descricao: l.Descricao, Tipo: string(l.Tipo), Categoria: l.Categoria})
-	}
-	for _, i := range e.Ignorados {
-		r.Ignorados = append(r.Ignorados, ignoradoJSON{Posicao: i.Posicao, Motivo: i.Motivo})
-	}
-	return r
-}
-
-// problema escreve a resposta de erro no formato da RFC 9457 (application/problem+json).
-func problema(w http.ResponseWriter, status int, tipo, detalhe string) {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"type":   "https://fluxo.ufrn.br/erros/" + tipo,
-		"status": status,
-		"detail": detalhe,
-	})
+	return 0
 }
