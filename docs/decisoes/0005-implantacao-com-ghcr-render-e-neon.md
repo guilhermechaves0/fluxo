@@ -32,6 +32,7 @@ importador não vai para o ar: a api sobe sem ele e responde 503 só na importa�
 | Banco | PostgreSQL gerenciado no Neon |
 | Segredos | `DB_URL`, `DB_USER` e `DB_PASSWORD` ficam nos segredos do GitHub Actions e no painel do Render, nunca no repositório |
 | Migrações | O job `migrar` do CI roda `api migrar` com a imagem recém-publicada contra o Neon. A api também migra ao subir |
+| Nova versão no ar | O CI pede a implantação ao Render por um gancho, quando o segredo `RENDER_DEPLOY_HOOK` existe. Sem ele, a nova versão entra pelo painel |
 | Saúde | `GET /health`, usado pelo Docker Compose e pelo Render |
 | Serviço Go | Fica fora da implantação. No `render.yaml` ele está num bloco comentado, com o que falta para ligá-lo |
 
@@ -57,6 +58,7 @@ Em compensação:
 - A lista de dependências de `shared` existe em dois arquivos, `build.gradle.kts` e `build-api.gradle.kts`. Uma
   dependência nova precisa entrar nos dois.
 - Os segredos do banco ficam em dois lugares, no GitHub e no Render, e trocar a senha exige atualizar os dois.
+- As imagens só são publicadas depois que os testes passam, então um pull request leva mais tempo para ficar verde.
 - A imagem da api tem cerca de 560 MB, por causa do JRE.
 
 ## Como verificar

@@ -42,6 +42,7 @@ com ajuda da ferramenta.
 | Parte do projeto | Como usei a IA | Como verifiquei |
 |---|---|---|
 | gRPC entre a api e o importador | Para gerar a primeira versão do contrato comentado, do uso de `context` no Go, do servidor gRPC com health check, do adaptador da api com prazo e dos testes, a partir do exemplo `avisos-go` da disciplina, e para rascunhar a ADR 0004 | Testes do Go pela pilha gRPC com `bufconn` e de prazo, testes do adaptador contra um servidor gRPC em memória, `mise run ci`, o sistema no Docker Compose com o importador no ar e parado, e uma revisão do código num contexto separado, que achou o limite de 4 MB na resposta do gRPC |
+| Imagens, CI e implantação | Para gerar a primeira versão do Dockerfile da api em dois estágios, do subcomando `migrar`, dos jobs que publicam as imagens e migram o banco e do `render.yaml`, a partir dos modelos de implantação da disciplina, e para rascunhar a ADR 0005 | `docker compose up --build` num diretório sem build prévio, com os três serviços saudáveis, o `migrar` contra o banco do compose, `mise run ci` e uma revisão do código num contexto separado, que pediu que a publicação das imagens esperasse os testes |
 
 ## Decisões minhas
 
