@@ -49,7 +49,7 @@ func LerArquivo(ctx context.Context, conteudo []byte) (dominio.Extrato, error) {
 		if ctx.Err() != nil {
 			return dominio.Extrato{}, err
 		}
-		return dominio.Extrato{}, fmt.Errorf("%w: %v", dominio.ErrFormatoDesconhecido, err)
+		return dominio.Extrato{}, fmt.Errorf("%w: %w", dominio.ErrFormatoDesconhecido, err)
 	}
 	return dominio.LerTextoDeFatura(ctx, linhas)
 }
@@ -76,6 +76,10 @@ func paraStatus(err error) error {
 		return status.Error(codes.DeadlineExceeded, err.Error())
 	case errors.Is(err, context.Canceled):
 		return status.Error(codes.Canceled, err.Error())
+	case errors.Is(err, pdftexto.ErrIlegivel):
+		// O erro traz o texto do pânico da biblioteca de PDF: vai só para o log, não para quem chamou.
+		slog.Warn("PDF ilegível", "erro", err)
+		return status.Error(codes.InvalidArgument, "não consegui ler o PDF")
 	case errors.Is(err, dominio.ErrArquivoVazio), errors.Is(err, dominio.ErrFormatoDesconhecido):
 		return status.Error(codes.InvalidArgument, err.Error())
 	default:

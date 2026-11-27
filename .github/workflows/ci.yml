@@ -69,7 +69,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: services/go.mod
-          cache: false # não há go.sum para cachear
+          cache-dependency-path: services/go.sum
 
       - name: gofmt
         run: |
@@ -109,11 +109,12 @@ jobs:
       - name: buf build
         run: buf build
 
-      # Os stubs de Go ficam versionados em services/gen. Se o .proto mudou e eles não, o diff acusa.
+      # Os stubs de Go ficam versionados em services/gen. Se o .proto mudou e eles não, o status acusa,
+      # inclusive arquivo novo que ainda não está no git.
       - name: Stubs de Go em dia
         run: |
           buf generate
-          git diff --exit-code -- services/gen
+          test -z "$(git status --porcelain -- services/gen)"
 
   # Em pull request só constrói, para provar que os Dockerfiles funcionam antes do merge. Na main publica
   # com as etiquetas do commit (para voltar a uma versão exata) e latest. Não faz parte do agregador `ci`.

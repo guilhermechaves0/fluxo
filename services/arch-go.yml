@@ -14,8 +14,9 @@ dependenciesRules:
         - "net/http"
         - "encoding/json"
         - "database/sql"
+      internal:
+        - "github.com/guilhermechaves0/fluxo/services/gen/*" # o contrato gerado, que é código do próprio módulo
       external:
         - "google.golang.org/grpc*"
         - "google.golang.org/protobuf*"
-        - "github.com/guilhermechaves0/fluxo/services/gen/*" # o contrato gerado
         - "github.com/ledongthuc/pdf" # a leitura de PDF fica em importador/pdftexto (ADR 0002)

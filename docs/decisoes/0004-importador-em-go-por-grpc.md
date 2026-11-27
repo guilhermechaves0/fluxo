@@ -28,9 +28,9 @@ A api chama o importador por gRPC, pelo contrato `protos/fluxo/importador/v1/imp
 |---|---|
 | Contrato | Pacote `fluxo.importador.v1`, com `buf lint` nas regras `STANDARD` e `COMMENTS` |
 | Stubs | Os de Go são gerados pelo `buf generate` e versionados em `services/gen`. Os de Kotlin são gerados no build da api, pelo plugin `com.google.protobuf` |
-| Prazo | Toda chamada da api leva um prazo de 10 segundos, que chega ao laço de leitura no Go pelo `context` |
+| Prazo | Toda chamada da api leva um prazo de 10 segundos, que chega ao laço de leitura no Go pelo `context`. A api desiste de conectar em 2 segundos |
 | Erros | `INVALID_ARGUMENT` vira 422 e `RESOURCE_EXHAUSTED` vira 413. Todo o resto, inclusive prazo vencido e serviço fora do ar, vira 503 |
-| Tamanho | Extrato de até 5 MB. O servidor aceita mensagens de até 6 MB, para recusar o excesso com o erro certo |
+| Tamanho | Extrato de até 5 MB. O servidor aceita mensagens de até 6 MB, para recusar o excesso com o erro certo, e a api aceita respostas de até 32 MB, porque a lista de lançamentos pode ser maior que o arquivo |
 | Saúde | Health check do gRPC, conferido pelo subcomando `importador saude`, que o Docker Compose usa |
 | Dependências | O domínio do importador segue só com a biblioteca padrão. gRPC e Protobuf ficam no adaptador `grpcapi` e em `cmd` |
 
@@ -56,13 +56,14 @@ Em compensação:
 - O módulo `services/` deixou de usar só a biblioteca padrão: o adaptador depende de `grpc` e de `protobuf`. O domínio
   continua sem dependência nenhuma, e o arch-go confere.
 - O build da api passou a gerar código, e o CI confere se os stubs de Go versionados estão em dia com o contrato.
-- Com o importador fora do ar, as primeiras respostas 503 demoram o prazo inteiro, porque o canal ainda tenta
-  reconectar.
+- Com o importador fora do ar, a primeira resposta 503 leva cerca de 2 segundos, o tempo de desistir da conexão. As
+  seguintes saem na hora.
 
 ## Como verificar
 
 - `buf lint` e a checagem dos stubs no CI.
 - `go test ./...` em `services/`: o servidor pela pilha gRPC, com `bufconn`, e o teste de prazo do domínio.
 - `ImportadorGrpcTest` na api, contra um servidor gRPC em memória: o sucesso, cada erro e o prazo.
+- `CanalDoImportadorTest`, contra um servidor gRPC de rede: uma resposta acima de 4 MB chega inteira.
 - `ArquiteturaTest`: `io.grpc` e o código gerado são proibidos no domínio e na aplicação.
 - `arch-go`: o domínio do importador não importa gRPC nem Protobuf.

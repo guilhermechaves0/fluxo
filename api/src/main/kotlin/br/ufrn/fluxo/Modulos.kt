@@ -9,7 +9,9 @@ import br.ufrn.fluxo.aplicacao.PreverImportacao
 import br.ufrn.fluxo.aplicacao.RepositorioDeContas
 import br.ufrn.fluxo.aplicacao.RepositorioDeTransacoes
 import br.ufrn.fluxo.aplicacao.TransacoesDaConta
-import io.grpc.ManagedChannelBuilder
+import io.grpc.ManagedChannel
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder
+import io.grpc.netty.shaded.io.netty.channel.ChannelOption
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -21,14 +23,32 @@ import org.koin.dsl.onClose
 // O Koin só resolve as dependências em tempo de execução. O ModulosTest chama verify() para que uma
 // dependência faltando apareça no CI.
 
+// O gRPC recusa por padrão mensagem recebida acima de 4 MB. O extrato aceito chega a 5 MB, e a resposta
+// do importador pode passar do tamanho do extrato: cada lançamento carrega id, data, descrição e tipo.
+private const val TAMANHO_MAXIMO_DA_RESPOSTA = 32 * 1024 * 1024
+
+// Com o importador fora do ar o TCP ficaria tentando conectar até o prazo da chamada (10 s). Com 2 s a
+// api responde 503 logo, e a rede interna conecta bem antes disso.
+private const val PRAZO_PARA_CONECTAR_MS = 2_000
+
+/**
+ * Canal para o importador em Go, com sua configuração de produção. Sem TLS: o importador só é alcançável
+ * pela rede interna do compose ou da plataforma.
+ */
+fun canalDoImportador(enderecoImportador: String): ManagedChannel = NettyChannelBuilder
+    .forTarget(enderecoImportador)
+    .usePlaintext()
+    .withOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, PRAZO_PARA_CONECTAR_MS)
+    .maxInboundMessageSize(TAMANHO_MAXIMO_DA_RESPOSTA)
+    .build()
+
 /**
  * Cliente gRPC do importador em Go. [enderecoImportador] é `host:porta`. O canal pertence ao adaptador, e o
  * Koin o fecha quando a aplicação para.
  */
 fun importador(enderecoImportador: String) = module {
     single<ImportadorDeExtratos> {
-        // Sem TLS: o importador só é alcançável pela rede interna do compose ou da plataforma.
-        ImportadorGrpc(ManagedChannelBuilder.forTarget(enderecoImportador).usePlaintext().build())
+        ImportadorGrpc(canalDoImportador(enderecoImportador))
     } onClose { (it as? AutoCloseable)?.close() }
 }
 
