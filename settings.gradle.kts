@@ -34,9 +34,9 @@ dependencyResolutionManagement {
 rootProject.name = "fluxo"
 
 // Com -Pfluxo.soApi=true o build só enxerga :api e :shared sem o alvo Android (shared/build-api.gradle.kts).
-// É assim que o Dockerfile da api compila dentro do container, que não tem o SDK do Android. Sem a
-// propriedade nada muda.
-val soApi = providers.gradleProperty("fluxo.soApi").isPresent
+// É assim que o Dockerfile da api compila dentro do container, que não tem o SDK do Android. Só o valor
+// true liga o modo; false ou a propriedade ausente deixam o build como sempre foi.
+val soApi = providers.gradleProperty("fluxo.soApi").map { it.toBoolean() }.getOrElse(false)
 
 include(":shared") // domínio usado pelo app e pela api
 include(":api") // serviço principal em Ktor, DIM0547
