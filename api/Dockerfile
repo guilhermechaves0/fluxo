@@ -8,19 +8,24 @@
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /src
 
-# O wrapper e os arquivos de build primeiro, para o download do Gradle ficar em cache de camada.
+# O wrapper e os arquivos de build primeiro. O download do Gradle vai para o mesmo cache mount do build,
+# senão a camada dele ficaria escondida pelo mount do RUN seguinte e o download se repetiria.
 COPY gradlew settings.gradle.kts build.gradle.kts gradle.properties ./
 COPY gradle gradle
-RUN ./gradlew --version
+RUN --mount=type=cache,target=/root/.gradle \
+    ./gradlew --version
 
 COPY config config
 COPY protos protos
 COPY shared shared
 COPY api api
 
-# O cache do Gradle fica num volume do BuildKit, fora da imagem, e acelera os builds seguintes.
+# O cache do Gradle fica num volume do BuildKit, fora da imagem, e acelera os builds seguintes. O compilador
+# do Kotlin roda no processo do Gradle (in-process), para o -Xmx2g do gradle.properties não criar um segundo
+# daemon e estourar a memória de um Docker pequeno.
 RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew --no-daemon -Pfluxo.soApi=true -Dorg.gradle.jvmargs="-Xmx1500m -Dfile.encoding=UTF-8" \
+    ./gradlew --no-daemon -Pfluxo.soApi=true -Pkotlin.compiler.execution.strategy=in-process \
+        -Dorg.gradle.jvmargs="-Xmx1500m -Dfile.encoding=UTF-8" \
         :api:installDist -x test
 
 FROM eclipse-temurin:21-jre
