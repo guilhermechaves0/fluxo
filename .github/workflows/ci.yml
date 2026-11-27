@@ -120,6 +120,7 @@ jobs:
   # com as etiquetas do commit (para voltar a uma versão exata) e latest. Não faz parte do agregador `ci`.
   imagens:
     name: Imagens (${{ matrix.nome }})
+    needs: [kotlin, go, proto] # só publica se os testes passarem
     runs-on: ubuntu-latest
     permissions:
       contents: read
