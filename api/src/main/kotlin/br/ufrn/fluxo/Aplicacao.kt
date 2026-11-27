@@ -17,11 +17,35 @@ import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.koin.core.module.Module
 import org.koin.ktor.plugin.Koin
+import kotlin.system.exitProcess
 
 private const val PORTA_PADRAO = 8080
+private const val CODIGO_DE_USO_INVALIDO = 2
 private const val ENDERECO_PADRAO_DO_IMPORTADOR = "localhost:9090"
 
-fun main() {
+fun main(args: Array<String>) {
+    val comando = try {
+        escolherComando(args)
+    } catch (erro: IllegalArgumentException) {
+        System.err.println(erro.message)
+        exitProcess(CODIGO_DE_USO_INVALIDO)
+    }
+    when (comando) {
+        Comando.SERVIR -> servir()
+        Comando.MIGRAR -> migrarEEncerrar(ConfigBanco.doAmbiente())
+    }
+}
+
+/**
+ * `api migrar`: aplica as migrações e termina com 0. Se o banco não responder ou uma migração falhar, a
+ * exceção sobe, o Flyway e o Hikari registram o motivo e o processo termina com 1.
+ */
+private fun migrarEEncerrar(configBanco: ConfigBanco) {
+    criarDataSource(configBanco).use { migrar(it) }
+    exitProcess(0)
+}
+
+private fun servir() {
     val porta = System.getenv("PORT")?.toIntOrNull() ?: PORTA_PADRAO
     val enderecoImportador = System.getenv("FLUXO_IMPORTADOR_ENDERECO") ?: ENDERECO_PADRAO_DO_IMPORTADOR
 
