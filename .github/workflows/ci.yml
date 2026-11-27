@@ -67,7 +67,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: services/go.mod
-          cache: false # não há go.sum para cachear
+          cache-dependency-path: services/go.sum
 
       - name: gofmt
         run: |
@@ -107,11 +107,12 @@ jobs:
       - name: buf build
         run: buf build
 
-      # Os stubs de Go ficam versionados em services/gen. Se o .proto mudou e eles não, o diff acusa.
+      # Os stubs de Go ficam versionados em services/gen. Se o .proto mudou e eles não, o status acusa,
+      # inclusive arquivo novo que ainda não está no git.
       - name: Stubs de Go em dia
         run: |
           buf generate
-          git diff --exit-code -- services/gen
+          test -z "$(git status --porcelain -- services/gen)"
 
   # Job exigido pela proteção da main; falha se algum job anterior falhar.
   ci:
