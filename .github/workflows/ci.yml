@@ -2,7 +2,7 @@
 #   kotlin  ktlintCheck, detekt, testes (com o de arquitetura da api) e build da api, do app desktop e do APK
 #           (DIM0524 e DIM0547)
 #   go      gofmt, go vet, arch-go, testes e build do importador (DIM0547)
-#   proto   buf lint e buf build do contrato (DIM0547)
+#   proto   buf lint, buf build e conferência dos stubs de Go gerados do contrato (DIM0547)
 #
 # `mise run ci` roda as mesmas verificações localmente.
 
@@ -106,6 +106,12 @@ jobs:
 
       - name: buf build
         run: buf build
+
+      # Os stubs de Go ficam versionados em services/gen. Se o .proto mudou e eles não, o diff acusa.
+      - name: Stubs de Go em dia
+        run: |
+          buf generate
+          git diff --exit-code -- services/gen
 
   # Job exigido pela proteção da main; falha se algum job anterior falhar.
   ci:
