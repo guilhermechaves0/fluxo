@@ -11,7 +11,7 @@ buf = "1.71.0"
 "go:github.com/arch-go/arch-go" = "1.7.0"
 
 [env]
-FLUXO_IMPORTADOR_URL = "http://localhost:9090"
+FLUXO_IMPORTADOR_ENDERECO = "localhost:9090"
 ANDROID_HOME = "{{ get_env(name='ANDROID_HOME', default=env.HOME ~ '/Library/Android/sdk') }}"
 
 # ---------------------------------------------------------------------------
@@ -33,11 +33,11 @@ run = [
 ]
 
 [tasks.lint]
-description = "Roda ktlint e detekt no Kotlin, gofmt, go vet e arch-go no Go e buf lint no contrato"
+description = "Roda ktlint e detekt no Kotlin, gofmt, go vet e arch-go no Go e buf lint no contrato (com os stubs de Go em dia)"
 depends = ["lint:kotlin", "lint:go", "lint:proto"]
 
 [tasks.up]
-description = "Gera a distribuição da api e sobe o banco (5432), a api (8080) e o importador (9090) no Docker"
+description = "Gera a distribuição da api e sobe o banco (5432), a api (8080) e o importador gRPC (9090) no Docker"
 run = ["./gradlew :api:installDist", "docker compose up --build"]
 
 [tasks.ci]
@@ -60,7 +60,11 @@ run = [
 ]
 
 [tasks."lint:proto"]
-run = ["buf lint", "buf build"]
+run = ["buf lint", "buf build", "buf generate", "git diff --exit-code -- services/gen"] # o último passo acusa stub de Go desatualizado
+
+[tasks.gerar]
+description = "Gera os stubs de Go do contrato gRPC em services/gen (os de Kotlin saem no build da api)"
+run = "buf generate"
 
 [tasks.fmt]
 description = "Formata o código Kotlin, Go e proto"
@@ -80,7 +84,7 @@ depends = ["banco"]
 run = "./gradlew :api:run"
 
 [tasks."run:importador"]
-description = "Sobe o importador Go na porta 9090"
+description = "Sobe o servidor gRPC do importador Go na porta 9090"
 dir = "services"
 run = "go run ./cmd/importador"
 
