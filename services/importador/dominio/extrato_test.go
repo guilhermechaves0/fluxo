@@ -1,6 +1,7 @@
 package dominio
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -95,7 +96,7 @@ func TestLerExtrato(t *testing.T) {
 	}
 	for _, c := range casos {
 		t.Run(c.arquivo, func(t *testing.T) {
-			extrato, err := LerExtrato(ler(t, c.arquivo))
+			extrato, err := LerExtrato(context.Background(), ler(t, c.arquivo))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -125,8 +126,8 @@ func TestLerExtrato(t *testing.T) {
 }
 
 func TestLerExtratoDuasVezesGeraOsMesmosIdentificadores(t *testing.T) {
-	primeiro, _ := LerExtrato(ler(t, "c6-fatura.csv"))
-	segundo, _ := LerExtrato(ler(t, "c6-fatura.csv"))
+	primeiro, _ := LerExtrato(context.Background(), ler(t, "c6-fatura.csv"))
+	segundo, _ := LerExtrato(context.Background(), ler(t, "c6-fatura.csv"))
 	for i := range primeiro.Lancamentos {
 		if primeiro.Lancamentos[i].IDExterno != segundo.Lancamentos[i].IDExterno {
 			t.Fatalf("o identificador mudou entre duas leituras do mesmo arquivo: %s e %s",
@@ -137,7 +138,7 @@ func TestLerExtratoDuasVezesGeraOsMesmosIdentificadores(t *testing.T) {
 
 func TestLerExtratoLinhasIguaisGanhamIdentificadoresDiferentes(t *testing.T) {
 	csv := "date,title,amount\n2026-09-03,Café,8.50\n2026-09-03,Café,8.50\n"
-	extrato, err := LerExtrato([]byte(csv))
+	extrato, err := LerExtrato(context.Background(), []byte(csv))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,10 +148,10 @@ func TestLerExtratoLinhasIguaisGanhamIdentificadoresDiferentes(t *testing.T) {
 }
 
 func TestLerExtratoRecusaArquivoVazioOuDesconhecido(t *testing.T) {
-	if _, err := LerExtrato([]byte("  \n")); !errors.Is(err, ErrArquivoVazio) {
+	if _, err := LerExtrato(context.Background(), []byte("  \n")); !errors.Is(err, ErrArquivoVazio) {
 		t.Errorf("esperava ErrArquivoVazio, obteve %v", err)
 	}
-	_, err := LerExtrato(ler(t, "desconhecido.csv"))
+	_, err := LerExtrato(context.Background(), ler(t, "desconhecido.csv"))
 	if !errors.Is(err, ErrFormatoDesconhecido) {
 		t.Errorf("esperava ErrFormatoDesconhecido, obteve %v", err)
 	}
@@ -164,7 +165,7 @@ func TestLerExtratoExplicaQuandoChegaPDFOuImagem(t *testing.T) {
 	}
 	for nome, conteudo := range casos {
 		t.Run(nome, func(t *testing.T) {
-			_, err := LerExtrato(conteudo)
+			_, err := LerExtrato(context.Background(), conteudo)
 			if !errors.Is(err, ErrFormatoDesconhecido) || !strings.Contains(err.Error(), "OFX ou CSV") {
 				t.Fatalf("esperava explicação pedindo OFX ou CSV, obteve %v", err)
 			}
@@ -184,7 +185,7 @@ func TestDataQueNaoExisteNoCalendarioEhRecusada(t *testing.T) {
 }
 
 func TestLerExtratoAceitaOFormatoAntigoSemCabecalho(t *testing.T) {
-	extrato, err := LerExtrato([]byte("2026-09-06;Supermercado;-312,45\n05/09/2026;Salário;4500.00\n"))
+	extrato, err := LerExtrato(context.Background(), []byte("2026-09-06;Supermercado;-312,45\n05/09/2026;Salário;4500.00\n"))
 	if err != nil {
 		t.Fatal(err)
 	}
